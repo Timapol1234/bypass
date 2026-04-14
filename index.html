@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>BYPASS - Secure your digital footprint</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#00eefc",
+                    "on-secondary": "#4f5066",
+                    "error-container": "#9f0519",
+                    "on-tertiary-container": "#f8f1ff",
+                    "on-primary-fixed-variant": "#005e64",
+                    "surface-tint": "#8ff5ff",
+                    "on-secondary-container": "#cfcee8",
+                    "surface-variant": "#22262f",
+                    "secondary-fixed": "#e1e0fb",
+                    "surface-container-lowest": "#000000",
+                    "on-surface-variant": "#a9abb3",
+                    "inverse-on-surface": "#52555c",
+                    "tertiary-fixed-dim": "#b190ff",
+                    "primary-fixed": "#00eefc",
+                    "tertiary-dim": "#874cff",
+                    "surface": "#0b0e14",
+                    "secondary-dim": "#d3d2ec",
+                    "on-primary-container": "#005359",
+                    "on-primary": "#005d63",
+                    "secondary": "#e1e0fb",
+                    "error": "#ff716c",
+                    "primary-fixed-dim": "#00deec",
+                    "secondary-container": "#44455a",
+                    "on-tertiary": "#290067",
+                    "on-secondary-fixed": "#3d3e52",
+                    "tertiary-fixed": "#bda1ff",
+                    "on-background": "#ecedf6",
+                    "background": "#0b0e14",
+                    "primary": "#8ff5ff",
+                    "surface-container": "#161a21",
+                    "secondary-fixed-dim": "#d3d2ec",
+                    "primary-dim": "#00deec",
+                    "on-error-container": "#ffa8a3",
+                    "outline": "#73757d",
+                    "tertiary-container": "#7000ff",
+                    "on-tertiary-fixed": "#1f0052",
+                    "on-surface": "#ecedf6",
+                    "on-error": "#490006",
+                    "on-tertiary-fixed-variant": "#4700a7",
+                    "on-secondary-fixed-variant": "#595a70",
+                    "inverse-surface": "#f9f9ff",
+                    "surface-container-highest": "#22262f",
+                    "on-primary-fixed": "#003f43",
+                    "surface-dim": "#0b0e14",
+                    "inverse-primary": "#006a71",
+                    "outline-variant": "#45484f",
+                    "surface-container-high": "#1c2028",
+                    "error-dim": "#d7383b",
+                    "tertiary": "#ac89ff",
+                    "surface-bright": "#282c36",
+                    "surface-container-low": "#10131a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #ecedf6; }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .primary-gradient { background: linear-gradient(135deg, #8ff5ff 0%, #00eefc 100%); }
+        .hidden { display: none; }
+        .server-btn.selected { border: 2px solid #00eefc; background: rgba(0,238,252,0.1); }
+        .result { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .copy-btn.copied { background: #00eefc; color: #005d63; }
+        .otp-input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            background: #22262f;
+            border: 2px solid #45484f;
+            border-radius: 12px;
+            color: #00eefc;
+        }
+        .otp-input:focus {
+            outline: none;
+            border-color: #00eefc;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+
+<!-- TopAppBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#0b0e14]/70 backdrop-blur-xl">
+<div class="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#00F0FF] text-2xl">shield_lock</span>
+<span class="text-2xl font-bold tracking-tighter text-[#ecedf6] italic font-['Space_Grotesk']">bypass</span>
+</div>
+<div id="user-email-display" class="text-primary text-sm hidden"></div>
+<button id="logout-btn" class="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-full text-sm hidden">Выйти</button>
+</div>
+</nav>
+
+<main class="pt-24 pb-12">
+
+<!-- Step 1: Email Input -->
+<section id="email-section" class="relative px-6 py-12 overflow-hidden">
+<div class="absolute top-[-10%] left-[-20%] w-[80%] h-[80%] bg-primary/5 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-0 right-[-10%] w-[60%] h-[60%] bg-tertiary/5 rounded-full blur-[100px]"></div>
+<div class="relative z-10 flex flex-col items-center text-center max-w-md mx-auto">
+<div class="mb-8 p-6 rounded-full bg-surface-container-high relative group">
+<div class="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse"></div>
+<span class="material-symbols-outlined text-primary text-7xl relative">alternate_email</span>
+</div>
+<h1 class="font-headline text-4xl md:text-5xl font-bold tracking-tight mb-6">
+Добро пожаловать в <span class="text-transparent bg-clip-text primary-gradient">BYPASS</span>
+</h1>
+<p class="text-on-surface-variant mb-8">Введите ваш email для получения доступа</p>
+
+<div class="w-full bg-surface-container p-8 rounded-xl">
+<div class="mb-6">
+<input type="email" id="login-email" placeholder="example@mail.com" class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary">
+</div>
+<div id="email-error" class="text-error text-sm mb-4 hidden"></div>
+<button id="send-code-btn" class="primary-gradient text-on-primary py-4 rounded-full font-bold text-lg w-full active:scale-95 transition-all">Отправить код</button>
+</div>
+</div>
+</section>
+
+<!-- Step 2: OTP Verification -->
+<section id="otp-section" class="relative px-6 py-12 overflow-hidden hidden">
+<div class="absolute top-[-10%] left-[-20%] w-[80%] h-[80%] bg-primary/5 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-0 right-[-10%] w-[60%] h-[60%] bg-tertiary/5 rounded-full blur-[100px]"></div>
+<div class="relative z-10 flex flex-col items-center text-center max-w-md mx-auto">
+<div class="mb-8 p-6 rounded-full bg-surface-container-high relative group">
+<div class="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse"></div>
+<span class="material-symbols-outlined text-primary text-7xl relative">pin</span>
+</div>
+<h2 class="font-headline text-3xl font-bold mb-4">Подтверждение</h2>
+<p class="text-on-surface-variant mb-8">Введите код из письма, отправленного на <span id="otp-email" class="text-primary"></span></p>
+
+<div class="w-full bg-surface-container p-8 rounded-xl">
+<div class="flex justify-center gap-3 mb-6">
+<input type="text" maxlength="1" class="otp-input digit-input" data-index="0">
+<input type="text" maxlength="1" class="otp-input digit-input" data-index="1">
+<input type="text" maxlength="1" class="otp-input digit-input" data-index="2">
+<input type="text" maxlength="1" class="otp-input digit-input" data-index="3">
+<input type="text" maxlength="1" class="otp-input digit-input" data-index="4">
+<input type="text" maxlength="1" class="otp-input digit-input" data-index="5">
+</div>
+<div id="otp-error" class="text-error text-sm mb-4 hidden"></div>
+<button id="verify-code-btn" class="primary-gradient text-on-primary py-4 rounded-full font-bold text-lg w-full active:scale-95 transition-all">Подтвердить</button>
+<button id="resend-code-btn" class="mt-4 text-primary text-sm hover:underline">Отправить код повторно</button>
+</div>
+</div>
+</section>
+
+<!-- Step 3: Server Selection (Скрыт по умолчанию) -->
+<section id="server-section" class="px-6 py-12 hidden">
+<h2 class="font-headline text-3xl font-bold mb-8 pl-2 border-l-4 border-primary">Выберите сервер</h2>
+<div id="server-list" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+
+<div class="bg-surface-container p-8 rounded-xl">
+<div class="input-group mb-6">
+<label class="text-on-surface-variant text-sm font-semibold mb-2 block">Имя пользователя (опционально)</label>
+<input type="text" id="username" placeholder="Введите ваше имя" class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary">
+</div>
+<div id="create-error" class="text-error text-sm mb-4 hidden"></div>
+<button id="create-key-btn" class="primary-gradient text-on-primary py-4 rounded-full font-bold text-lg w-full active:scale-95 transition-all">Сгенерировать ключ</button>
+</div>
+</section>
+
+<!-- Result Section -->
+<section id="result-section" class="px-6 py-12 hidden">
+<div class="bg-surface-container p-8 rounded-xl result">
+<div class="text-center mb-6">
+<div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+<span class="material-symbols-outlined text-primary text-3xl">check_circle</span>
+</div>
+<h2 class="font-headline text-2xl font-bold">Ключ готов!</h2>
+<p id="result-info" class="text-on-surface-variant mt-2"></p>
+</div>
+
+<div class="qr-container text-center mb-6">
+<img id="qr-img" src="" alt="QR Code" class="inline-block bg-white p-2 rounded-xl w-40 h-40">
+</div>
+
+<div class="bg-surface-container-high rounded-xl p-4 mb-4">
+<label class="text-primary text-xs font-bold uppercase tracking-wider">VLESS ключ</label>
+<div id="vless-url" class="text-sm text-on-surface-variant break-all mt-1 font-mono"></div>
+<button class="copy-btn mt-3 bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-semibold w-full" onclick="copyText('vless-url', this)">Скопировать</button>
+</div>
+
+<div class="bg-surface-container-high rounded-xl p-4 mb-4">
+<label class="text-primary text-xs font-bold uppercase tracking-wider">Ссылка подписки</label>
+<div id="sub-url" class="text-sm text-on-surface-variant break-all mt-1 font-mono"></div>
+<button class="copy-btn mt-3 bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-semibold w-full" onclick="copyText('sub-url', this)">Скопировать</button>
+</div>
+
+<div class="bg-surface-container-high rounded-xl p-4">
+<h3 class="font-headline font-bold mb-3">Как подключиться</h3>
+<ol class="text-on-surface-variant text-sm space-y-2 list-decimal list-inside">
+<li>Скачайте <strong>V2Box</strong>, <strong>Streisand</strong> или <strong>Hiddify</strong></li>
+<li>Отсканируйте QR-код или вставьте ссылку подписки</li>
+<li>Подключитесь и пользуйтесь!</li>
+</ol>
+</div>
+
+<button id="reset-btn" class="mt-6 bg-surface-container-high border border-outline-variant/30 text-on-surface py-3 rounded-full font-medium w-full active:scale-95 transition-all">Создать ещё один ключ</button>
+</div>
+</section>
+
+<!-- Feature Section: Bento Style -->
+<section class="px-6 py-12">
+<h2 class="font-headline text-3xl font-bold mb-8 pl-2 border-l-4 border-primary">Современные протоколы</h2>
+<div class="grid grid-cols-1 gap-6">
+<div class="bg-surface-container p-8 rounded-xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-9xl">speed</span>
+</div>
+<div class="relative z-10">
+<div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary">bolt</span>
+</div>
+<h3 class="font-headline text-2xl font-bold mb-3">Speed</h3>
+<p class="text-on-surface-variant leading-relaxed">Разработан для больших нагрузок. Никаких задержек. Уникальные протоколы заботятся о вашей скорости.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-surface-container-high p-8 rounded-xl border border-outline-variant/10">
+<div class="w-12 h-12 bg-tertiary/10 rounded-lg flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-tertiary">visibility_off</span>
+</div>
+<h3 class="font-headline text-xl font-bold mb-3">No Logs</h3>
+<p class="text-on-surface-variant text-sm">Полная конфиденциальность. Ваши данные нигде не хранятся и не записываются.</p>
+</div>
+<div class="bg-surface-container-high p-8 rounded-xl border border-outline-variant/10">
+<div class="w-12 h-12 bg-primary-container/10 rounded-lg flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary-container">public</span>
+</div>
+<h3 class="font-headline text-xl font-bold mb-3">Global Access</h3>
+<p class="text-on-surface-variant text-sm">Более 100 серверов по всему миру. Получайте доступ к сервисам из любой точки мира.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Dynamic Map Section -->
+<section class="px-6 py-12">
+<div class="bg-surface-container-lowest rounded-2xl overflow-hidden h-[300px] relative border border-outline-variant/10">
+<img class="w-full h-full object-cover opacity-40 grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcPI7dNS4rA8QvzPzuP5j6jCaeZCww4fNYQSU9xW2kniDb-iXfiulZhj8qmrjrNtAj3bGoe5CAwvU-yypjw8Wi8VAetuZzNRRYnl2ACChlVjL8DLBVk_EncqXL0DNn8q6fpZPoDg_DKF7EDKPrIXOwYyhueRdtHzba00tobI5y4yKIMz23WPpCC_mEkTtRYAolKVaTB8SrZ-ifxUAmLQljSJN1Xedm9Xd3-1ERzmOxMOGIvOo7dnAksH4CwTFljL5i52qzlwrqorY" alt="World Map">
+<div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent"></div>
+<div class="absolute bottom-6 left-6 right-6 flex items-center justify-between">
+<div>
+<div class="text-primary text-xs font-bold tracking-[0.2em] uppercase mb-1">Current Node</div>
+<div class="text-xl font-headline font-bold">Amsterdam, Netherlands</div>
+</div>
+<div class="flex items-center gap-2 bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md">
+<span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+PROTECTED
+</div>
+</div>
+</div>
+</section>
+</main>
+
+<!-- Footer -->
+<footer class="w-full bg-[#0b0e14] border-t border-[#45484f]/15">
+<div class="w-full px-8 py-12 flex flex-col items-center gap-8 text-center">
+<div class="text-lg font-bold text-[#ecedf6] font-headline tracking-tighter">BYPASS_OS</div>
+<div class="flex flex-wrap justify-center gap-6 text-[#ecedf6]/50 text-sm font-['Inter']">
+<a class="hover:text-[#00F0FF] transition-all" href="#">Privacy</a>
+<a class="hover:text-[#00F0FF] transition-all" href="#">Terms</a>
+<a class="hover:text-[#00F0FF] transition-all" href="#">Protocol</a>
+<a class="hover:text-[#00F0FF] transition-all" href="#">Status</a>
+</div>
+<div class="text-[#ecedf6]/30 text-[10px] tracking-widest font-mono uppercase">
+© 2024 BYPASS. ENCRYPTED ACCESS.
+</div>
+</div>
+</footer>
+
+<script>
+let pendingEmail = '';
+let sessionToken = localStorage.getItem('session_token');
+let selectedServer = null;
+let createToken = '9afd436e-064e';
+
+// Проверка сессии
+if (sessionToken) {
+    fetch('/api/verify-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: sessionToken })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            showServerSection();
+            document.getElementById('user-email-display').textContent = data.email;
+            document.getElementById('user-email-display').classList.remove('hidden');
+            document.getElementById('logout-btn').classList.remove('hidden');
+        } else {
+            localStorage.removeItem('session_token');
+        }
+    });
+}
+
+// OTP input handling
+const digits = document.querySelectorAll('.digit-input');
+digits.forEach((digit, index) => {
+    digit.addEventListener('input', (e) => {
+        if (e.target.value.length === 1 && index < 5) {
+            digits[index + 1].focus();
+        }
+    });
+    digit.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            digits[index - 1].focus();
+        }
+    });
+});
+
+function getOtpCode() {
+    let code = '';
+    digits.forEach(digit => {
+        code += digit.value;
+    });
+    return code;
+}
+
+// Send code to email
+document.getElementById('send-code-btn')?.addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const errorEl = document.getElementById('email-error');
+    
+    if (!email) {
+        errorEl.textContent = 'Введите email';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+    
+    errorEl.classList.add('hidden');
+    const btn = document.getElementById('send-code-btn');
+    btn.disabled = true;
+    btn.textContent = 'Отправка...';
+    
+    try {
+        const res = await fetch('/api/send-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            errorEl.textContent = data.error;
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        
+        pendingEmail = email;
+        document.getElementById('otp-email').textContent = email;
+        document.getElementById('email-section').classList.add('hidden');
+        document.getElementById('otp-section').classList.remove('hidden');
+        
+        // Clear OTP inputs
+        digits.forEach(d => d.value = '');
+        digits[0].focus();
+        
+    } catch (e) {
+        errorEl.textContent = 'Ошибка соединения';
+        errorEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Отправить код';
+    }
+});
+
+// Verify OTP code
+document.getElementById('verify-code-btn')?.addEventListener('click', async () => {
+    const code = getOtpCode();
+    const errorEl = document.getElementById('otp-error');
+    
+    if (code.length !== 6) {
+        errorEl.textContent = 'Введите 6-значный код';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+    
+    errorEl.classList.add('hidden');
+    const btn = document.getElementById('verify-code-btn');
+    btn.disabled = true;
+    btn.textContent = 'Проверка...';
+    
+    try {
+        const res = await fetch('/api/verify-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pendingEmail, code })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            errorEl.textContent = data.error;
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        
+        localStorage.setItem('session_token', data.token);
+        sessionToken = data.token;
+        
+        document.getElementById('otp-section').classList.add('hidden');
+        showServerSection();
+        document.getElementById('user-email-display').textContent = pendingEmail;
+        document.getElementById('user-email-display').classList.remove('hidden');
+        document.getElementById('logout-btn').classList.remove('hidden');
+        
+    } catch (e) {
+        errorEl.textContent = 'Ошибка соединения';
+        errorEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Подтвердить';
+    }
+});
+
+// Resend code
+document.getElementById('resend-code-btn')?.addEventListener('click', async () => {
+    const errorEl = document.getElementById('otp-error');
+    const btn = document.getElementById('resend-code-btn');
+    btn.disabled = true;
+    btn.textContent = 'Отправка...';
+    
+    try {
+        const res = await fetch('/api/send-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pendingEmail })
+        });
+        
+        if (res.ok) {
+            errorEl.textContent = 'Код отправлен повторно!';
+            errorEl.classList.remove('hidden');
+            errorEl.style.color = '#4ade80';
+            setTimeout(() => {
+                errorEl.classList.add('hidden');
+                errorEl.style.color = '';
+            }, 3000);
+        }
+    } catch (e) {
+        errorEl.textContent = 'Ошибка';
+        errorEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Отправить код повторно';
+    }
+});
+
+// Logout
+document.getElementById('logout-btn')?.addEventListener('click', () => {
+    localStorage.removeItem('session_token');
+    location.reload();
+});
+
+// Load servers
+fetch('/api/servers')
+    .then(r => r.json())
+    .then(servers => {
+        const container = document.getElementById('server-list');
+        if (!container) return;
+        
+        for (const [key, s] of Object.entries(servers)) {
+            const btn = document.createElement('button');
+            btn.className = 'server-btn bg-surface-container-high p-4 rounded-xl text-center transition-all hover:scale-105';
+            btn.innerHTML = `
+                <span class="text-3xl mb-2 block">${s.flag}</span>
+                <span class="font-semibold">${s.name}</span>
+            `;
+            btn.onclick = () => {
+                document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedServer = key;
+            };
+            container.appendChild(btn);
+            
+            if (!selectedServer) btn.click();
+        }
+    });
+
+function showServerSection() {
+    document.getElementById('server-section').classList.remove('hidden');
+    document.getElementById('result-section').classList.add('hidden');
+    window.scrollTo({ top: document.getElementById('server-section').offsetTop - 80, behavior: 'smooth' });
+}
+
+function showResult(data) {
+    document.getElementById('server-section').classList.add('hidden');
+    document.getElementById('result-section').classList.remove('hidden');
+    document.getElementById('qr-img').src = 'data:image/png;base64,' + data.qr;
+    document.getElementById('vless-url').textContent = data.vless_url;
+    document.getElementById('sub-url').textContent = data.sub_url;
+    document.getElementById('result-info').textContent = `${data.username || pendingEmail} — ${data.server}`;
+    window.scrollTo({ top: document.getElementById('result-section').offsetTop - 80, behavior: 'smooth' });
+}
+
+async function createKey() {
+    const username = document.getElementById('username').value.trim() || pendingEmail.split('@')[0];
+    const errorEl = document.getElementById('create-error');
+    
+    if (!selectedServer) {
+        errorEl.textContent = 'Выберите сервер';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+    
+    errorEl.classList.add('hidden');
+    const btn = document.getElementById('create-key-btn');
+    btn.disabled = true;
+    btn.textContent = 'Генерация...';
+    
+    try {
+        const res = await fetch('/api/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ server: selectedServer, username, token: createToken })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            errorEl.textContent = data.error;
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        
+        showResult(data);
+    } catch (e) {
+        errorEl.textContent = 'Ошибка соединения с сервером';
+        errorEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Сгенерировать ключ';
+    }
+}
+
+function resetForm() {
+    document.getElementById('username').value = '';
+    document.getElementById('server-section').classList.remove('hidden');
+    document.getElementById('result-section').classList.add('hidden');
+}
+
+function copyText(elementId, btn) {
+    const text = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied');
+        btn.textContent = 'Скопировано!';
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.textContent = 'Скопировать';
+        }, 2000);
+    });
+}
+
+document.getElementById('create-key-btn')?.addEventListener('click', createKey);
+document.getElementById('reset-btn')?.addEventListener('click', resetForm);
+
+// Enter key handlers
+document.getElementById('login-email')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('send-code-btn').click();
+});
+document.getElementById('username')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('create-key-btn').click();
+});
+</script>
+
+</body>
+</html>
