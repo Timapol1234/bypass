@@ -683,33 +683,45 @@ document.getElementById('logout-btn')?.addEventListener('click', async () => {
     location.reload();
 });
 
-// Load servers
+// Load servers (только загружаем; рендер происходит в renderServerButtons при показе секции)
 fetch(`${API_URL}/api/servers`)
     .then(r => r.json())
-    .then(servers => {
-        const container = document.getElementById('server-list');
-        if (!container) return;
-        
-        serversList = servers;
-        
-        for (const [key, s] of Object.entries(servers)) {
-            const btn = document.createElement('button');
-            btn.className = 'server-btn bg-surface-container-high p-4 rounded-xl text-center transition-all hover:scale-105';
-            btn.setAttribute('data-server', key);
-            btn.innerHTML = `
-                <span class="text-3xl mb-2 block">${s.flag}</span>
-                <span class="font-semibold">${s.name}</span>
-            `;
+    .then(servers => { serversList = servers; });
+
+function renderServerButtons(busyServers = [], allowedServer = null) {
+    const container = document.getElementById('server-list');
+    if (!container) return 0;
+    container.innerHTML = '';
+    selectedServer = null;
+    let available = 0;
+
+    for (const [key, s] of Object.entries(serversList)) {
+        const isBusy = busyServers.includes(key) && key !== allowedServer;
+        const btn = document.createElement('button');
+        btn.className = 'server-btn bg-surface-container-high p-4 rounded-xl text-center transition-all';
+        btn.setAttribute('data-server', key);
+        btn.disabled = isBusy;
+        btn.innerHTML = `
+            <span class="text-3xl mb-2 block">${s.flag}</span>
+            <span class="font-semibold">${s.name}</span>
+            ${isBusy ? '<div class="text-[10px] mt-1 text-on-surface-variant">уже есть ключ</div>' : ''}
+        `;
+        if (isBusy) {
+            btn.classList.add('opacity-40', 'cursor-not-allowed');
+        } else {
+            btn.classList.add('hover:scale-105');
             btn.onclick = () => {
                 document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 selectedServer = key;
             };
-            container.appendChild(btn);
-            
+            available += 1;
             if (!selectedServer) btn.click();
         }
-    });
+        container.appendChild(btn);
+    }
+    return available;
+}
 
 let myKeys = [];
 let currentSub = null;
@@ -717,7 +729,8 @@ let pendingRequest = null;
 let tariffs = [];
 let paymentInfo = null;
 let selectedTariffId = null;
-let replacing = false;  // true — следующий createKey() заменит существующий ключ
+let replaceOldUuid = null;  // uuid заменяемого ключа; null = создание нового
+let replaceOldServer = null; // server заменяемого ключа (разрешается остаться на нём)
 let suggestedUsername = '';
 
 function hideAllSections() {
@@ -752,27 +765,47 @@ async function fetchSuggestedUsername() {
     return suggestedUsername;
 }
 
-async function showServerSection({ replace = false } = {}) {
+async function showServerSection({ replaceKey = null } = {}) {
     const subActive = !!(currentSub && currentSub.active);
     if (!subActive) {
         openPaymentModal();
         return;
     }
-    replacing = !!replace;
+    replaceOldUuid = replaceKey ? replaceKey.uuid : null;
+    replaceOldServer = replaceKey ? replaceKey.server : null;
+    const isReplace = !!replaceKey;
+
     hideAllSections();
     document.getElementById('server-section').classList.remove('hidden');
     setMarketingVisible(false);
 
+    // Рендер серверов: исключаем занятые, но при замене текущий сервер ключа — разрешён
+    const busy = myKeys.map(k => k.server);
+    const available = renderServerButtons(busy, replaceOldServer);
+
     // Заголовок и кнопка меняются в зависимости от режима
     const title = document.getElementById('server-section-title');
     const btn = document.getElementById('create-key-btn');
-    if (title) title.textContent = replacing ? 'Выберите новый сервер' : 'Выберите сервер';
-    if (btn) btn.textContent = replacing ? 'Заменить ключ' : 'Сгенерировать ключ';
+    if (title) title.textContent = isReplace ? 'Выберите новый сервер' : 'Выберите сервер';
+    if (btn) btn.textContent = isReplace ? 'Заменить ключ' : 'Сгенерировать ключ';
+
+    // Если свободных серверов нет — сообщить и скрыть форму
+    const errorEl = document.getElementById('create-error');
+    if (available === 0) {
+        if (errorEl) {
+            errorEl.textContent = 'Ключи созданы на всех серверах. Удалите или замените существующий ключ.';
+            errorEl.classList.remove('hidden');
+        }
+        if (btn) btn.disabled = true;
+    } else {
+        if (errorEl) errorEl.classList.add('hidden');
+        if (btn) btn.disabled = false;
+    }
 
     // Подставить имя
     const name = await fetchSuggestedUsername();
     const inp = document.getElementById('username');
-    if (inp && !inp.value) inp.value = name || '';
+    if (inp) inp.value = (isReplace && replaceKey.username) ? replaceKey.username : (name || '');
 
     window.scrollTo({ top: document.getElementById('server-section').offsetTop - 80, behavior: 'smooth' });
 }
@@ -804,7 +837,8 @@ function fmtDate(iso) {
 }
 
 async function loadMyKeys() {
-    replacing = false;  // выход из flow замены, если юзер вернулся
+    replaceOldUuid = null;  // выход из flow замены, если юзер вернулся
+    replaceOldServer = null;
     hideAllSections();
     setMarketingVisible(false);
     document.getElementById('my-keys-section').classList.remove('hidden');
@@ -1131,8 +1165,9 @@ function renderMyKeys() {
     const empty = document.getElementById('my-keys-empty');
     const newBtn = document.getElementById('new-key-btn');
 
-    // Подписка = 1 ключ, поэтому при наличии ключа кнопка "Новый ключ" прячется.
-    if (newBtn) newBtn.classList.toggle('hidden', myKeys.length > 0);
+    // 1 ключ на сервер: кнопка "Новый ключ" прячется, если на всех серверах уже есть ключи.
+    const totalServers = Object.keys(serversList).length;
+    if (newBtn) newBtn.classList.toggle('hidden', totalServers > 0 && myKeys.length >= totalServers);
 
     if (!myKeys.length) {
         empty.classList.remove('hidden');
@@ -1157,8 +1192,8 @@ function renderMyKeys() {
             <button class="primary-gradient text-on-primary py-2.5 rounded-full font-semibold text-sm active:scale-95 transition-all mb-2" data-show="${i}">
                 Показать QR и ссылки
             </button>
-            <button class="bg-surface-container-high text-on-surface py-2 rounded-full font-semibold text-sm active:scale-95 transition-all mb-2 flex items-center justify-center gap-1" data-replace="${i}" title="Удалит текущий ключ и создаст новый на выбранном сервере">
-                <span class="material-symbols-outlined text-base">swap_horiz</span> Сменить ключ / сервер
+            <button class="bg-surface-container-high text-on-surface py-2 rounded-full font-semibold text-sm active:scale-95 transition-all mb-2 flex items-center justify-center gap-1" data-replace="${i}" title="Пересоздаст ключ на этом сервере">
+                <span class="material-symbols-outlined text-base">swap_horiz</span> Сменить ключ
             </button>
             <div class="text-xs text-on-surface-variant font-mono opacity-60 truncate mt-1" title="${escapeHtml(k.sub_url)}">${escapeHtml(k.sub_url)}</div>
         </div>
@@ -1172,8 +1207,9 @@ function renderMyKeys() {
     });
     list.querySelectorAll('[data-replace]').forEach(btn => {
         btn.onclick = () => {
-            if (!confirm('Создать новый ключ? Старый ключ перестанет работать сразу после замены.')) return;
-            showServerSection({ replace: true });
+            const k = myKeys[+btn.dataset.replace];
+            if (!confirm(`Пересоздать ключ на сервере ${k.server_name}? Старый ключ перестанет работать сразу после замены.`)) return;
+            showServerSection({ replaceKey: k });
         };
     });
 }
@@ -1203,7 +1239,7 @@ async function createKey() {
     const rawName = document.getElementById('username').value.trim();
     const username = rawName || suggestedUsername || (userEmail || pendingEmail).split('@')[0].replace(/[^a-zA-Z0-9_\-]/g, '');
     const errorEl = document.getElementById('create-error');
-    const isReplace = replacing;
+    const isReplace = !!replaceOldUuid;
 
     if (!selectedServer) {
         errorEl.textContent = 'Выберите сервер';
@@ -1223,12 +1259,14 @@ async function createKey() {
     btn.textContent = isReplace ? 'Замена...' : 'Генерация...';
 
     const endpoint = isReplace ? '/api/my-keys/replace' : '/api/create';
+    const body = { server: selectedServer, username, token: sessionToken };
+    if (isReplace) body.old_uuid = replaceOldUuid;
 
     try {
         const res = await fetch(`${API_URL}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ server: selectedServer, username, token: sessionToken })
+            body: JSON.stringify(body)
         });
 
         const data = await res.json();
@@ -1250,8 +1288,8 @@ async function createKey() {
             return;
         }
 
-        if (res.status === 409 || data.code === 'key_exists') {
-            errorEl.textContent = 'У вас уже есть ключ. Используйте «Сменить ключ».';
+        if (res.status === 409 || data.code === 'key_exists_on_server' || data.code === 'key_exists') {
+            errorEl.textContent = 'У вас уже есть ключ на этом сервере. Замените его через карточку ключа.';
             errorEl.classList.remove('hidden');
             loadMyKeys();
             return;
@@ -1264,7 +1302,8 @@ async function createKey() {
         }
 
         document.getElementById('username').value = '';
-        replacing = false;
+        replaceOldUuid = null;
+        replaceOldServer = null;
         showResult(data, isReplace ? 'Ключ заменён' : 'Ключ успешно создан!');
     } catch (e) {
         errorEl.textContent = 'Ошибка соединения с сервером';

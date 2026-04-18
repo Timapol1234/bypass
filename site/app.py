@@ -664,8 +664,8 @@ def create_key():
 
     users = load_users()
     email_lc = session["email"].lower()
-    if any((u.get("email") or "").lower() == email_lc for u in users):
-        return jsonify({"error": "У вас уже есть ключ. Удалите его или замените, чтобы создать новый.", "code": "key_exists"}), 409
+    if any((u.get("email") or "").lower() == email_lc and u.get("server") == server_key for u in users):
+        return jsonify({"error": "У вас уже есть ключ на этом сервере. Замените его, чтобы пересоздать.", "code": "key_exists_on_server"}), 409
 
     user_uuid = str(uuid.uuid4())
 
@@ -742,9 +742,10 @@ def delete_my_key():
 
 @app.route("/api/my-keys/replace", methods=["POST"])
 def replace_my_key():
-    """Заменяет текущий ключ юзера на новый (другой сервер/имя). Удаляет старый и создаёт новый в одной транзакции."""
+    """Заменяет конкретный ключ юзера (по old_uuid) на новый. Сервер можно оставить тем же или сменить, но новый не должен быть занят другим ключом того же юзера."""
     data = request.json or {}
     token = data.get("token", "")
+    old_uuid = (data.get("old_uuid") or "").strip()
     server_key = data.get("server")
     new_username = (data.get("username") or "").strip()
 
@@ -765,7 +766,17 @@ def replace_my_key():
 
     email_lc = session["email"].lower()
     users = load_users()
-    old = next((u for u in users if (u.get("email") or "").lower() == email_lc), None)
+    old = None
+    if old_uuid:
+        old = next((u for u in users if u.get("uuid") == old_uuid and (u.get("email") or "").lower() == email_lc), None)
+        if not old:
+            return jsonify({"error": "Старый ключ не найден"}), 404
+
+    if any((u.get("email") or "").lower() == email_lc
+           and u.get("server") == server_key
+           and (not old or u.get("uuid") != old["uuid"])
+           for u in users):
+        return jsonify({"error": "У вас уже есть ключ на этом сервере.", "code": "key_exists_on_server"}), 409
 
     if old:
         try:
