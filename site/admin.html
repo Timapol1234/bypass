@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>BYPASS — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #ecedf6; }
+  .font-headline { font-family: 'Space Grotesk', sans-serif; }
+  .primary-gradient { background: linear-gradient(135deg, #8ff5ff 0%, #00eefc 100%); }
+  .hidden { display: none; }
+  .pulse-dot { animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #22262f; font-size: 14px; }
+  th { background: #161a21; color: #a9abb3; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  tr:hover td { background: #161a21; }
+  .btn-danger { background: rgba(255, 113, 108, 0.15); color: #ff716c; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .btn-danger:hover { background: rgba(255, 113, 108, 0.25); }
+  .chat-item { cursor: pointer; }
+  .chat-item:hover { background: #1c2028; }
+  .chat-item.active { background: #22262f; border-left: 3px solid #00eefc; }
+  .msg-user { background: #22262f; align-self: flex-start; }
+  .msg-admin { background: rgba(0, 238, 252, 0.15); color: #00eefc; align-self: flex-end; }
+</style>
+</head>
+<body class="bg-[#0b0e14]">
+
+<!-- LOGIN -->
+<section id="login-section" class="min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-md bg-[#161a21] p-8 rounded-2xl">
+    <div class="flex items-center gap-2 mb-8 justify-center">
+      <span class="material-symbols-outlined text-[#00eefc] text-3xl">admin_panel_settings</span>
+      <span class="text-2xl font-bold tracking-tighter italic font-['Space_Grotesk']">bypass / admin</span>
+    </div>
+    <label class="text-xs text-[#a9abb3] font-semibold uppercase tracking-wider">Пароль админа</label>
+    <input id="admin-password" type="password" autofocus class="w-full mt-2 bg-[#22262f] border border-[#45484f]/30 rounded-xl px-4 py-3 focus:outline-none focus:border-[#00eefc]">
+    <div id="login-error" class="text-[#ff716c] text-sm mt-3 hidden"></div>
+    <button id="login-btn" class="primary-gradient text-[#005d63] py-3 rounded-full font-bold w-full mt-5 active:scale-95 transition-all">Войти</button>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="hidden">
+  <nav class="sticky top-0 z-10 bg-[#0b0e14]/90 backdrop-blur-xl border-b border-[#22262f]">
+    <div class="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#00eefc]">admin_panel_settings</span>
+        <span class="text-xl font-bold tracking-tighter italic font-['Space_Grotesk']">bypass / admin</span>
+      </div>
+      <div class="flex items-center gap-3 text-sm">
+        <span id="last-refresh" class="text-[#a9abb3]"></span>
+        <button id="refresh-btn" class="bg-[#22262f] px-3 py-1.5 rounded-full text-xs flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">refresh</span> Обновить
+        </button>
+        <button id="logout-btn" class="bg-[#22262f] px-3 py-1.5 rounded-full text-xs">Выйти</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <!-- KPI cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="bg-[#161a21] p-6 rounded-2xl">
+        <div class="text-[#a9abb3] text-xs uppercase tracking-wider">Всего пользователей</div>
+        <div id="kpi-total" class="text-4xl font-bold font-['Space_Grotesk'] mt-2">—</div>
+      </div>
+      <div class="bg-[#161a21] p-6 rounded-2xl">
+        <div class="text-[#a9abb3] text-xs uppercase tracking-wider">Online сейчас</div>
+        <div class="flex items-center gap-3 mt-2">
+          <span class="w-2 h-2 rounded-full bg-green-400 pulse-dot"></span>
+          <div id="kpi-online" class="text-4xl font-bold font-['Space_Grotesk']">—</div>
+        </div>
+      </div>
+      <div class="bg-[#161a21] p-6 rounded-2xl">
+        <div class="text-[#a9abb3] text-xs uppercase tracking-wider">Общий трафик</div>
+        <div id="kpi-traffic" class="text-4xl font-bold font-['Space_Grotesk'] mt-2">—</div>
+      </div>
+    </div>
+
+    <!-- USERS TABLE -->
+    <div class="bg-[#161a21] rounded-2xl overflow-hidden mb-10">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[#22262f]">
+        <h2 class="font-headline text-xl font-bold">Пользователи</h2>
+        <input id="search" placeholder="Поиск по имени/email..." class="bg-[#22262f] px-3 py-1.5 rounded-full text-sm w-64 focus:outline-none focus:ring-1 focus:ring-[#00eefc]/40">
+      </div>
+      <div class="overflow-x-auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Статус</th>
+              <th>Имя</th>
+              <th>Email</th>
+              <th>Сервер</th>
+              <th>Создан</th>
+              <th>↑ Upload</th>
+              <th>↓ Download</th>
+              <th>Всего</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="users-body">
+            <tr><td colspan="9" class="text-center text-[#a9abb3] py-10">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CHATS -->
+    <div class="bg-[#161a21] rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[#22262f]">
+        <h2 class="font-headline text-xl font-bold">Чаты</h2>
+        <span id="chats-count" class="text-xs text-[#a9abb3]"></span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 min-h-[400px]">
+        <div id="chats-list" class="border-r border-[#22262f] overflow-y-auto max-h-[500px]">
+          <div class="p-6 text-center text-[#a9abb3] text-sm">Чатов пока нет</div>
+        </div>
+        <div id="chat-view" class="md:col-span-2 flex flex-col">
+          <div id="chat-messages" class="flex-1 p-6 flex flex-col gap-3 overflow-y-auto max-h-[440px]">
+            <div class="text-center text-[#a9abb3] text-sm">Выберите чат слева</div>
+          </div>
+          <div id="chat-reply" class="hidden p-4 border-t border-[#22262f] flex gap-2">
+            <input id="chat-input" placeholder="Ответ пользователю..." class="flex-1 bg-[#22262f] px-4 py-2 rounded-full focus:outline-none focus:ring-1 focus:ring-[#00eefc]/40">
+            <button id="chat-send-btn" class="primary-gradient text-[#005d63] px-5 py-2 rounded-full font-bold">Отправить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<script>
+const API_URL = 'http://109.248.162.180:8080';
+let adminPass = sessionStorage.getItem('admin_pass') || '';
+let refreshTimer = null;
+let allUsers = [];
+let activeChatId = null;
+
+function fmtBytes(n) {
+  if (!n) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0, v = n;
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+  return v.toFixed(v < 10 && i > 0 ? 2 : 1) + ' ' + units[i];
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+  } catch (e) { return iso; }
+}
+
+async function api(path, body = {}) {
+  const res = await fetch(API_URL + path, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({password: adminPass, ...body})
+  });
+  if (res.status === 403) {
+    adminPass = '';
+    sessionStorage.removeItem('admin_pass');
+    showLogin();
+    throw new Error('unauthorized');
+  }
+  return res.json();
+}
+
+function showLogin() {
+  document.getElementById('login-section').classList.remove('hidden');
+  document.getElementById('dashboard').classList.add('hidden');
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+}
+
+function showDashboard() {
+  document.getElementById('login-section').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  loadAll();
+  refreshTimer = setInterval(loadAll, 15000);
+}
+
+async function loadAll() {
+  try {
+    const [stats, chats] = await Promise.all([
+      api('/api/admin/stats'),
+      api('/api/chat/list')
+    ]);
+    renderStats(stats);
+    renderChats(chats);
+    document.getElementById('last-refresh').textContent = 'обновлено ' + new Date().toLocaleTimeString('ru-RU');
+  } catch (e) { /* уже обработано в api() */ }
+}
+
+function renderStats(data) {
+  allUsers = data.users || [];
+  document.getElementById('kpi-total').textContent = data.total || 0;
+  document.getElementById('kpi-online').textContent = data.online_count || 0;
+  const totalBytes = allUsers.reduce((s, u) => s + u.traffic_up + u.traffic_down, 0);
+  document.getElementById('kpi-traffic').textContent = fmtBytes(totalBytes);
+  renderUsers();
+}
+
+function renderUsers() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const filtered = q
+    ? allUsers.filter(u =>
+        (u.username || '').toLowerCase().includes(q) ||
+        (u.email || '').toLowerCase().includes(q))
+    : allUsers;
+
+  const body = document.getElementById('users-body');
+  if (!filtered.length) {
+    body.innerHTML = '<tr><td colspan="9" class="text-center text-[#a9abb3] py-10">Нет пользователей</td></tr>';
+    return;
+  }
+
+  body.innerHTML = filtered.map(u => `
+    <tr>
+      <td>
+        <span class="inline-flex items-center gap-1.5 text-xs font-semibold ${u.online ? 'text-green-400' : 'text-[#a9abb3]'}">
+          <span class="w-2 h-2 rounded-full ${u.online ? 'bg-green-400 pulse-dot' : 'bg-[#45484f]'}"></span>
+          ${u.online ? 'online' : 'offline'}
+        </span>
+      </td>
+      <td class="font-semibold">${escapeHtml(u.username)}</td>
+      <td class="text-[#a9abb3]">${escapeHtml(u.email || '—')}</td>
+      <td>${u.server_flag || ''} ${escapeHtml(u.server_name || u.server)}</td>
+      <td class="text-[#a9abb3] text-xs">${fmtDate(u.created)}</td>
+      <td class="text-[#00eefc] font-mono">${fmtBytes(u.traffic_up)}</td>
+      <td class="text-[#ac89ff] font-mono">${fmtBytes(u.traffic_down)}</td>
+      <td class="font-mono font-semibold">${fmtBytes(u.traffic_up + u.traffic_down)}</td>
+      <td><button class="btn-danger" data-del="${escapeHtml(u.username)}">Удалить</button></td>
+    </tr>
+  `).join('');
+
+  body.querySelectorAll('[data-del]').forEach(btn => {
+    btn.onclick = () => deleteUser(btn.dataset.del);
+  });
+}
+
+async function deleteUser(username) {
+  if (!confirm(`Удалить пользователя "${username}"? Ключ перестанет работать.`)) return;
+  try {
+    const r = await api('/api/delete', {username});
+    if (r.ok) loadAll();
+    else alert(r.error || 'Ошибка');
+  } catch (e) { /* already handled */ }
+}
+
+function renderChats(chats) {
+  document.getElementById('chats-count').textContent = chats.length + ' чатов';
+  const list = document.getElementById('chats-list');
+  if (!chats.length) {
+    list.innerHTML = '<div class="p-6 text-center text-[#a9abb3] text-sm">Чатов пока нет</div>';
+    return;
+  }
+  list.innerHTML = chats.map(c => `
+    <div class="chat-item p-4 border-b border-[#22262f] ${c.chat_id === activeChatId ? 'active' : ''}" data-chat="${escapeHtml(c.chat_id)}">
+      <div class="flex justify-between items-start mb-1">
+        <div class="font-semibold">${escapeHtml(c.name)}</div>
+        <div class="text-xs text-[#a9abb3]">${escapeHtml(c.last_time || '')}</div>
+      </div>
+      <div class="text-sm text-[#a9abb3] truncate">${escapeHtml(c.last_message || '')}</div>
+      ${c.unread ? `<div class="inline-block mt-1 bg-[#00eefc] text-[#005d63] text-xs font-bold px-2 py-0.5 rounded-full">${c.unread}</div>` : ''}
+    </div>
+  `).join('');
+
+  list.querySelectorAll('[data-chat]').forEach(el => {
+    el.onclick = () => openChat(el.dataset.chat);
+  });
+}
+
+async function openChat(chatId) {
+  activeChatId = chatId;
+  document.querySelectorAll('.chat-item').forEach(el => el.classList.toggle('active', el.dataset.chat === chatId));
+  try {
+    const msgs = await api('/api/chat/get', {chat_id: chatId});
+    const box = document.getElementById('chat-messages');
+    if (!msgs.length) {
+      box.innerHTML = '<div class="text-center text-[#a9abb3] text-sm">Пусто</div>';
+    } else {
+      box.innerHTML = msgs.map(m => `
+        <div class="max-w-[70%] px-4 py-2 rounded-2xl ${m.from === 'admin' ? 'msg-admin' : 'msg-user'}">
+          <div class="text-xs opacity-70 mb-0.5">${m.from === 'admin' ? 'Вы' : 'Пользователь'} · ${escapeHtml(m.time)}</div>
+          <div>${escapeHtml(m.text)}</div>
+        </div>
+      `).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+    document.getElementById('chat-reply').classList.remove('hidden');
+  } catch (e) { /* handled */ }
+}
+
+async function sendReply() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !activeChatId) return;
+  const btn = document.getElementById('chat-send-btn');
+  btn.disabled = true;
+  try {
+    await api('/api/chat/reply', {chat_id: activeChatId, message: text});
+    input.value = '';
+    openChat(activeChatId);
+    loadAll();
+  } catch (e) { /* handled */ }
+  finally { btn.disabled = false; }
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Events
+document.getElementById('login-btn').onclick = async () => {
+  const pwd = document.getElementById('admin-password').value;
+  const err = document.getElementById('login-error');
+  err.classList.add('hidden');
+  try {
+    const res = await fetch(API_URL + '/api/admin/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({password: pwd})
+    });
+    if (res.ok) {
+      adminPass = pwd;
+      sessionStorage.setItem('admin_pass', pwd);
+      showDashboard();
+    } else {
+      const data = await res.json();
+      err.textContent = data.error || 'Ошибка';
+      err.classList.remove('hidden');
+    }
+  } catch (e) {
+    err.textContent = 'Ошибка соединения';
+    err.classList.remove('hidden');
+  }
+};
+
+document.getElementById('admin-password').addEventListener('keypress', e => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+
+document.getElementById('refresh-btn').onclick = loadAll;
+document.getElementById('logout-btn').onclick = () => {
+  adminPass = '';
+  sessionStorage.removeItem('admin_pass');
+  showLogin();
+};
+document.getElementById('search').addEventListener('input', renderUsers);
+document.getElementById('chat-send-btn').onclick = sendReply;
+document.getElementById('chat-input').addEventListener('keypress', e => {
+  if (e.key === 'Enter') sendReply();
+});
+
+// Auto-login если пароль уже в sessionStorage
+if (adminPass) showDashboard();
+</script>
+</body>
+</html>

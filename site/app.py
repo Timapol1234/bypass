@@ -21,6 +21,7 @@ USERS_DB = "/opt/vpn-site/users.json"
 VERIFICATION_CODES_DB = "/opt/vpn-site/verification_codes.json"
 SESSIONS_DB = "/opt/vpn-site/sessions.json"
 SECRETS_FILE = "/opt/vpn-site/secrets.json"
+TRAFFIC_SNAPSHOT_FILE = "/opt/vpn-site/traffic_snapshot.json"
 
 # Хост, с которого раздаются файлы подписок (файлы лежат только на NL-сервере)
 SUB_HOST = "109.248.162.180:8080"
@@ -29,6 +30,8 @@ SUB_HOST = "109.248.162.180:8080"
 SESSION_TTL_DAYS = 30
 # Минимальный интервал между запросами кода на один email (секунды)
 OTP_RESEND_COOLDOWN = 60
+# Юзер считается online, если трафик рос в последние N секунд
+ONLINE_THRESHOLD_SECONDS = 120
 
 
 def load_secrets():
@@ -145,14 +148,23 @@ def get_xray_stats(server_key):
             connections = int(result.stdout.strip() or 0)
         
         # Получаем количество клиентов в конфиге
-        if not s.get("remote"):
-            with open(s["xray_config"], "r") as f:
-                config = json.load(f)
-                clients_count = len(config["inbounds"][0]["settings"]["clients"])
+        count_script = (
+            "import json\n"
+            f"c = json.load(open({s['xray_config']!r}))\n"
+            "ib = next((i for i in c['inbounds'] if i.get('protocol') == 'vless'), None)\n"
+            "print(len(ib['settings']['clients']) if ib else 0)\n"
+        )
+        if s.get("remote"):
+            r = subprocess.run(
+                ["ssh", "-o", "StrictHostKeyChecking=no", s["ssh"], "python3", "-"],
+                input=count_script, capture_output=True, text=True, timeout=5
+            )
         else:
-            cmd = f'ssh {s["ssh"]} "python3 -c \\"import json; c=json.load(open(\\\'{s["xray_config"]}\\\')); print(len(c[\\\'inbounds\\\'][0][\\\'settings\\\'][\\\'clients\\\']))\\""'
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=5)
-            clients_count = int(result.stdout.strip() or 0)
+            r = subprocess.run(
+                ["python3", "-"],
+                input=count_script, capture_output=True, text=True, timeout=5
+            )
+        clients_count = int(r.stdout.strip() or 0)
         
         return {
             "active_connections": connections,
@@ -437,34 +449,86 @@ def run_on_server(server_key, command):
     else:
         subprocess.run(command, shell=True, check=True, capture_output=True)
 
-def add_to_xray(user_uuid, server_key):
+
+def exec_python_on_server(server_key, script):
+    """Отправить python-скрипт на сервер через stdin — без экранирования кавычек."""
+    s = SERVERS[server_key]
+    if s.get("remote"):
+        cmd = ["ssh", "-o", "StrictHostKeyChecking=no", s["ssh"], "python3", "-"]
+    else:
+        cmd = ["python3", "-"]
+    r = subprocess.run(cmd, input=script, capture_output=True, text=True, check=True)
+    return r.stdout
+
+
+def add_to_xray(user_uuid, server_key, email):
     config_path = SERVERS[server_key]["xray_config"]
     script = (
-        f"python3 -c \""
-        f"import json; "
-        f"c=json.load(open('{config_path}')); "
-        f"clients=c['inbounds'][0]['settings']['clients']; "
-        f"any(x['id']=='{user_uuid}' for x in clients) or "
-        f"clients.append({{'id':'{user_uuid}','flow':''}}); "
-        f"json.dump(c,open('{config_path}','w'),indent=2)"
-        f"\""
+        "import json\n"
+        f"p = {config_path!r}\n"
+        "with open(p) as f: c = json.load(f)\n"
+        "ib = next(i for i in c['inbounds'] if i.get('protocol') == 'vless')\n"
+        "clients = ib['settings']['clients']\n"
+        f"if not any(x['id'] == {user_uuid!r} for x in clients):\n"
+        f"    clients.append({{'id': {user_uuid!r}, 'email': {email!r}, 'flow': ''}})\n"
+        "with open(p, 'w') as f: json.dump(c, f, indent=2)\n"
     )
-    run_on_server(server_key, script)
+    exec_python_on_server(server_key, script)
     run_on_server(server_key, "systemctl restart xray")
+
 
 def remove_from_xray(user_uuid, server_key):
     config_path = SERVERS[server_key]["xray_config"]
     script = (
-        f"python3 -c \""
-        f"import json; "
-        f"c=json.load(open('{config_path}')); "
-        f"c['inbounds'][0]['settings']['clients']="
-        f"[x for x in c['inbounds'][0]['settings']['clients'] if x['id']!='{user_uuid}']; "
-        f"json.dump(c,open('{config_path}','w'),indent=2)"
-        f"\""
+        "import json\n"
+        f"p = {config_path!r}\n"
+        "with open(p) as f: c = json.load(f)\n"
+        "ib = next(i for i in c['inbounds'] if i.get('protocol') == 'vless')\n"
+        f"ib['settings']['clients'] = [x for x in ib['settings']['clients'] if x['id'] != {user_uuid!r}]\n"
+        "with open(p, 'w') as f: json.dump(c, f, indent=2)\n"
     )
-    run_on_server(server_key, script)
+    exec_python_on_server(server_key, script)
     run_on_server(server_key, "systemctl restart xray")
+
+
+def query_xray_stats(server_key):
+    """Возвращает {email: {'up': int, 'down': int}} по данным Stats API."""
+    s = SERVERS[server_key]
+    cmd_str = "xray api statsquery --server=127.0.0.1:10085 -pattern 'user>>>'"
+    try:
+        if s.get("remote"):
+            r = subprocess.run(
+                ["ssh", "-o", "StrictHostKeyChecking=no", s["ssh"], cmd_str],
+                capture_output=True, text=True, timeout=10
+            )
+        else:
+            r = subprocess.run(cmd_str, shell=True, capture_output=True, text=True, timeout=10)
+    except Exception as e:
+        print(f"Stats query failed for {server_key}: {e}")
+        return {}
+
+    if r.returncode != 0 or not r.stdout.strip():
+        return {}
+
+    try:
+        data = json.loads(r.stdout)
+    except Exception:
+        return {}
+
+    result = {}
+    for stat in data.get("stat", []):
+        parts = stat.get("name", "").split(">>>")
+        if len(parts) != 4 or parts[0] != "user":
+            continue
+        email = parts[1]
+        direction = parts[3]
+        value = int(stat.get("value", 0) or 0)
+        bucket = result.setdefault(email, {"up": 0, "down": 0})
+        if direction == "uplink":
+            bucket["up"] = value
+        elif direction == "downlink":
+            bucket["down"] = value
+    return result
 
 def update_subscription(user_uuid, server_key, username):
     os.makedirs(SUB_DIR, exist_ok=True)
@@ -514,7 +578,7 @@ def create_key():
     user_uuid = str(uuid.uuid4())
 
     try:
-        add_to_xray(user_uuid, server_key)
+        add_to_xray(user_uuid, server_key, username)
     except Exception as e:
         return jsonify({"error": f"Ошибка Xray: {str(e)}"}), 500
 
@@ -545,10 +609,114 @@ def create_key():
         "server": SERVERS[server_key]["name"]
     })
 
+def _is_admin(data):
+    return bool(ADMIN_PASSWORD) and data.get("password") == ADMIN_PASSWORD
+
+
+@app.route("/admin")
+def admin_page():
+    return send_from_directory("static", "admin.html")
+
+
+@app.route("/api/admin/login", methods=["POST"])
+def admin_login():
+    data = request.json or {}
+    if _is_admin(data):
+        return jsonify({"ok": True})
+    return jsonify({"error": "Неверный пароль"}), 403
+
+
+def load_traffic_snapshot():
+    if os.path.exists(TRAFFIC_SNAPSHOT_FILE):
+        try:
+            with open(TRAFFIC_SNAPSHOT_FILE, "r") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def save_traffic_snapshot(snap):
+    with open(TRAFFIC_SNAPSHOT_FILE, "w") as f:
+        json.dump(snap, f)
+
+
+@app.route("/api/admin/stats", methods=["POST"])
+def admin_stats():
+    data = request.json or {}
+    if not _is_admin(data):
+        return jsonify({"error": "Неверный пароль"}), 403
+
+    users = load_users()
+    snapshot = load_traffic_snapshot()
+    now = datetime.now()
+    now_iso = now.isoformat()
+
+    # Один запрос статистики на сервер, затем выбираем per-user
+    stats_by_server = {}
+    for srv_key in SERVERS:
+        stats_by_server[srv_key] = query_xray_stats(srv_key)
+
+    result = []
+    new_snapshot = {}
+
+    for u in users:
+        username = u["username"]
+        srv_key = u["server"]
+        srv_stats = stats_by_server.get(srv_key, {})
+        traffic = srv_stats.get(username, {"up": 0, "down": 0})
+
+        prev = snapshot.get(username, {})
+        prev_total = prev.get("up", 0) + prev.get("down", 0)
+        curr_total = traffic["up"] + traffic["down"]
+
+        if curr_total > prev_total:
+            last_active = now_iso
+        else:
+            last_active = prev.get("last_active")
+
+        online = False
+        if last_active:
+            try:
+                delta = (now - datetime.fromisoformat(last_active)).total_seconds()
+                online = delta < ONLINE_THRESHOLD_SECONDS
+            except Exception:
+                online = False
+
+        new_snapshot[username] = {
+            "up": traffic["up"],
+            "down": traffic["down"],
+            "last_active": last_active
+        }
+
+        result.append({
+            "username": username,
+            "email": u.get("email", "—"),
+            "server": srv_key,
+            "server_name": SERVERS[srv_key]["name"],
+            "server_flag": SERVERS[srv_key]["flag"],
+            "created": u.get("created", ""),
+            "traffic_up": traffic["up"],
+            "traffic_down": traffic["down"],
+            "online": online,
+            "last_active": last_active,
+        })
+
+    save_traffic_snapshot(new_snapshot)
+
+    result.sort(key=lambda x: (not x["online"], -(x["traffic_up"] + x["traffic_down"])))
+
+    return jsonify({
+        "users": result,
+        "total": len(users),
+        "online_count": sum(1 for u in result if u["online"]),
+    })
+
+
 @app.route("/api/users", methods=["POST"])
 def list_users():
     data = request.json
-    if data.get("password") != ADMIN_PASSWORD:
+    if not _is_admin(data):
         return jsonify({"error": "Неверный пароль"}), 403
     users = load_users()
     return jsonify(users)
@@ -556,7 +724,7 @@ def list_users():
 @app.route("/api/delete", methods=["POST"])
 def delete_user():
     data = request.json
-    if data.get("password") != ADMIN_PASSWORD:
+    if not _is_admin(data):
         return jsonify({"error": "Неверный пароль"}), 403
 
     username = data.get("username", "")
@@ -629,7 +797,7 @@ def chat_get():
 @app.route("/api/chat/list", methods=["POST"])
 def chat_list():
     data = request.json
-    if data.get("password") != ADMIN_PASSWORD:
+    if not _is_admin(data):
         return jsonify({"error": "Неверный пароль"}), 403
     chats = load_chats()
     result = []
@@ -648,7 +816,7 @@ def chat_list():
 @app.route("/api/chat/reply", methods=["POST"])
 def chat_reply():
     data = request.json
-    if data.get("password") != ADMIN_PASSWORD:
+    if not _is_admin(data):
         return jsonify({"error": "Неверный пароль"}), 403
 
     chat_id = data.get("chat_id", "")
