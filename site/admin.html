@@ -20,6 +20,19 @@
   tr:hover td { background: #161a21; }
   .btn-danger { background: rgba(255, 113, 108, 0.15); color: #ff716c; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
   .btn-danger:hover { background: rgba(255, 113, 108, 0.25); }
+  .btn-primary { background: rgba(0, 238, 252, 0.15); color: #00eefc; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .btn-primary:hover { background: rgba(0, 238, 252, 0.25); }
+  .btn-warn { background: rgba(250, 204, 21, 0.15); color: #facc15; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .btn-warn:hover { background: rgba(250, 204, 21, 0.25); }
+  .tab-btn { padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #a9abb3; background: #22262f; }
+  .tab-btn.active { background: #00eefc; color: #005d63; }
+  .input-admin { background: #22262f; border: 1px solid rgba(69,72,79,0.3); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+  .input-admin:focus { outline: none; border-color: #00eefc; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  .badge-green { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .badge-yellow { background: rgba(250,204,21,0.15); color: #facc15; }
+  .badge-red { background: rgba(255,113,108,0.15); color: #ff716c; }
+  .badge-gray { background: rgba(169,171,179,0.15); color: #a9abb3; }
 </style>
 </head>
 <body class="bg-[#0b0e14]">
@@ -76,8 +89,16 @@
       </div>
     </div>
 
+    <!-- TABS -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      <button class="tab-btn active" data-tab="users">Пользователи</button>
+      <button class="tab-btn" data-tab="payments">Платежи <span id="payments-badge" class="ml-1 text-[10px] opacity-80"></span></button>
+      <button class="tab-btn" data-tab="subs">Подписки</button>
+      <button class="tab-btn" data-tab="promos">Промокоды</button>
+    </div>
+
     <!-- USERS TABLE -->
-    <div class="bg-[#161a21] rounded-2xl overflow-hidden">
+    <div id="tab-users" class="tab-panel bg-[#161a21] rounded-2xl overflow-hidden">
       <div class="flex items-center justify-between px-6 py-4 border-b border-[#22262f]">
         <h2 class="font-headline text-xl font-bold">Пользователи</h2>
         <input id="search" placeholder="Поиск по имени/email..." class="bg-[#22262f] px-3 py-1.5 rounded-full text-sm w-64 focus:outline-none focus:ring-1 focus:ring-[#00eefc]/40">
@@ -101,6 +122,134 @@
             <tr><td colspan="9" class="text-center text-[#a9abb3] py-10">Загрузка...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div id="tab-payments" class="tab-panel hidden bg-[#161a21] rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[#22262f]">
+        <h2 class="font-headline text-xl font-bold">Заявки на оплату</h2>
+        <select id="payments-filter" class="input-admin">
+          <option value="pending">В ожидании</option>
+          <option value="approved">Подтверждённые</option>
+          <option value="rejected">Отклонённые</option>
+          <option value="">Все</option>
+        </select>
+      </div>
+      <div class="overflow-x-auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Тариф</th>
+              <th>Сумма</th>
+              <th>Создана</th>
+              <th>Статус</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="payments-body">
+            <tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTIONS -->
+    <div id="tab-subs" class="tab-panel hidden">
+      <div class="bg-[#161a21] rounded-2xl p-6 mb-6">
+        <h3 class="font-headline text-lg font-bold mb-4">Быстрые действия</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="text-xs text-[#a9abb3] font-semibold uppercase tracking-wider">Продлить на N дней</label>
+            <div class="flex gap-2 mt-2">
+              <input id="quick-ext-email" placeholder="email" class="input-admin flex-1">
+              <input id="quick-ext-days" type="number" placeholder="30" class="input-admin w-20">
+              <button id="quick-ext-btn" class="btn-primary">OK</button>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-[#a9abb3] font-semibold uppercase tracking-wider">Выдать безлимит</label>
+            <div class="flex gap-2 mt-2">
+              <input id="quick-unl-email" placeholder="email" class="input-admin flex-1">
+              <button id="quick-unl-btn" class="btn-primary">Вкл</button>
+              <button id="quick-unl-off-btn" class="btn-warn">Выкл</button>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-[#a9abb3] font-semibold uppercase tracking-wider">Удалить подписку</label>
+            <div class="flex gap-2 mt-2">
+              <input id="quick-rev-email" placeholder="email" class="input-admin flex-1">
+              <button id="quick-rev-btn" class="btn-danger">Удалить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-[#161a21] rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-[#22262f]">
+          <h2 class="font-headline text-xl font-bold">Активные подписки</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Тип</th>
+                <th>Истекает</th>
+                <th>Обновлена</th>
+                <th>Статус</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="subs-body">
+              <tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Загрузка...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMO CODES -->
+    <div id="tab-promos" class="tab-panel hidden">
+      <div class="bg-[#161a21] rounded-2xl p-6 mb-6">
+        <h3 class="font-headline text-lg font-bold mb-4">Создать промокод</h3>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <input id="promo-code" placeholder="BYPASS99" class="input-admin uppercase">
+          <input id="promo-days" type="number" placeholder="Дней (30)" class="input-admin">
+          <input id="promo-max" type="number" placeholder="Лимит (0=∞)" class="input-admin">
+          <input id="promo-expires" type="number" placeholder="Истекает через дн." class="input-admin">
+          <div class="flex items-center gap-2">
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" id="promo-unlimited" class="w-4 h-4"> Безлимит
+            </label>
+            <button id="promo-create-btn" class="btn-primary ml-auto">Создать</button>
+          </div>
+        </div>
+        <div id="promo-error" class="text-[#ff716c] text-sm mt-3 hidden"></div>
+      </div>
+
+      <div class="bg-[#161a21] rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-[#22262f]">
+          <h2 class="font-headline text-xl font-bold">Промокоды</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Код</th>
+                <th>Бонус</th>
+                <th>Использований</th>
+                <th>Истекает</th>
+                <th>Создан</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="promos-body">
+              <tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Загрузка...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -159,10 +308,187 @@ function showDashboard() {
 
 async function loadAll() {
   try {
-    const stats = await api('/api/admin/stats');
+    const [stats, payments, subs, promos] = await Promise.all([
+      api('/api/admin/stats'),
+      api('/api/admin/payments/list', { status: document.getElementById('payments-filter').value }),
+      api('/api/admin/subscription/list'),
+      api('/api/admin/promo/list'),
+    ]);
     renderStats(stats);
+    renderPayments(payments);
+    renderSubs(subs);
+    renderPromos(promos);
     document.getElementById('last-refresh').textContent = 'обновлено ' + new Date().toLocaleTimeString('ru-RU');
   } catch (e) { /* уже обработано в api() */ }
+}
+
+function renderPayments(data) {
+  const items = data.requests || [];
+  const tariffs = data.tariffs || {};
+  const pending = items.filter(r => r.status === 'pending').length;
+  const badge = document.getElementById('payments-badge');
+  badge.textContent = pending ? `(${pending})` : '';
+  const body = document.getElementById('payments-body');
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Нет заявок</td></tr>';
+    return;
+  }
+  body.innerHTML = items.map(r => {
+    const tariffLabel = tariffs[r.tariff]?.label || r.tariff;
+    const statusBadge = r.status === 'pending'
+      ? '<span class="badge badge-yellow">ожидает</span>'
+      : r.status === 'approved'
+        ? '<span class="badge badge-green">оплачено</span>'
+        : '<span class="badge badge-red">отклонено</span>';
+    const actions = r.status === 'pending'
+      ? `<button class="btn-primary" data-approve="${r.id}">✓ Подтвердить</button>
+         <button class="btn-danger ml-2" data-reject="${r.id}">Отклонить</button>`
+      : `<span class="text-[#a9abb3] text-xs">${fmtDate(r.resolved_at)}</span>`;
+    return `
+      <tr>
+        <td class="font-semibold">${escapeHtml(r.email)}</td>
+        <td>${escapeHtml(tariffLabel)} (${r.days}д)</td>
+        <td class="font-mono">${r.price}₽</td>
+        <td class="text-[#a9abb3] text-xs">${fmtDate(r.created)}</td>
+        <td>${statusBadge}</td>
+        <td>${actions}</td>
+      </tr>`;
+  }).join('');
+  body.querySelectorAll('[data-approve]').forEach(btn => {
+    btn.onclick = () => approvePayment(btn.dataset.approve);
+  });
+  body.querySelectorAll('[data-reject]').forEach(btn => {
+    btn.onclick = () => rejectPayment(btn.dataset.reject);
+  });
+}
+
+async function approvePayment(id) {
+  if (!confirm('Подтвердить оплату? Подписка будет активирована.')) return;
+  const r = await api('/api/admin/payments/approve', { id });
+  if (r.ok) { showToast('Подписка активирована'); loadAll(); }
+  else alert(r.error || 'Ошибка');
+}
+
+async function rejectPayment(id) {
+  const reason = prompt('Причина отклонения (необязательно):') ?? '';
+  const r = await api('/api/admin/payments/reject', { id, reason });
+  if (r.ok) { showToast('Отклонено'); loadAll(); }
+  else alert(r.error || 'Ошибка');
+}
+
+function renderSubs(items) {
+  const body = document.getElementById('subs-body');
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Нет подписок</td></tr>';
+    return;
+  }
+  body.innerHTML = items.map(s => {
+    const typeLabel = s.plan === 'unlimited' ? '∞ безлимит' : 'платная';
+    const statusBadge = s.active
+      ? '<span class="badge badge-green">активна</span>'
+      : '<span class="badge badge-gray">истекла</span>';
+    const exp = s.plan === 'unlimited' ? '—' : fmtDate(s.expires_at);
+    return `
+      <tr>
+        <td class="font-semibold">${escapeHtml(s.email)}</td>
+        <td>${typeLabel}</td>
+        <td class="text-[#a9abb3] text-xs">${exp}</td>
+        <td class="text-[#a9abb3] text-xs">${fmtDate(s.updated)}</td>
+        <td>${statusBadge}</td>
+        <td>
+          <button class="btn-primary" data-ext="${escapeHtml(s.email)}">+30д</button>
+          <button class="btn-danger ml-1" data-rev="${escapeHtml(s.email)}">Удалить</button>
+        </td>
+      </tr>`;
+  }).join('');
+  body.querySelectorAll('[data-ext]').forEach(btn => {
+    btn.onclick = () => quickExtend(btn.dataset.ext, 30);
+  });
+  body.querySelectorAll('[data-rev]').forEach(btn => {
+    btn.onclick = () => quickRevoke(btn.dataset.rev);
+  });
+}
+
+async function quickExtend(email, days) {
+  const r = await api('/api/admin/subscription/extend', { email, days });
+  if (r.ok) { showToast('Подписка продлена'); loadAll(); }
+  else alert(r.error || 'Ошибка');
+}
+
+async function quickUnlimited(email, enabled) {
+  const r = await api('/api/admin/subscription/unlimited', { email, enabled });
+  if (r.ok) { showToast(enabled ? 'Безлимит включён' : 'Безлимит выключен'); loadAll(); }
+  else alert(r.error || 'Ошибка');
+}
+
+async function quickRevoke(email) {
+  if (!confirm(`Удалить подписку ${email}? Ключи будут отключены.`)) return;
+  const r = await api('/api/admin/subscription/revoke', { email });
+  if (r.ok) { showToast('Подписка удалена'); loadAll(); }
+  else alert(r.error || 'Ошибка');
+}
+
+function renderPromos(items) {
+  const body = document.getElementById('promos-body');
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Промокодов нет</td></tr>';
+    return;
+  }
+  body.innerHTML = items.map(p => {
+    const bonus = p.unlimited ? '∞ безлимит' : `+${p.days} дн.`;
+    const usage = p.max_uses ? `${p.uses || 0} / ${p.max_uses}` : `${p.uses || 0} / ∞`;
+    return `
+      <tr>
+        <td class="font-mono font-bold">${escapeHtml(p.code)}</td>
+        <td>${bonus}</td>
+        <td>${usage}</td>
+        <td class="text-[#a9abb3] text-xs">${p.expires_at ? fmtDate(p.expires_at) : '—'}</td>
+        <td class="text-[#a9abb3] text-xs">${fmtDate(p.created)}</td>
+        <td><button class="btn-danger" data-del="${escapeHtml(p.code)}">Удалить</button></td>
+      </tr>`;
+  }).join('');
+  body.querySelectorAll('[data-del]').forEach(btn => {
+    btn.onclick = () => deletePromo(btn.dataset.del);
+  });
+}
+
+async function createPromo() {
+  const code = document.getElementById('promo-code').value.trim().toUpperCase();
+  const days = parseInt(document.getElementById('promo-days').value || '0', 10);
+  const max_uses = parseInt(document.getElementById('promo-max').value || '0', 10);
+  const expires_in_days = parseInt(document.getElementById('promo-expires').value || '0', 10);
+  const unlimited = document.getElementById('promo-unlimited').checked;
+  const err = document.getElementById('promo-error');
+  err.classList.add('hidden');
+
+  const r = await api('/api/admin/promo/create', { code, days, max_uses, expires_in_days, unlimited });
+  if (r.ok) {
+    showToast('Промокод создан');
+    document.getElementById('promo-code').value = '';
+    document.getElementById('promo-days').value = '';
+    document.getElementById('promo-max').value = '';
+    document.getElementById('promo-expires').value = '';
+    document.getElementById('promo-unlimited').checked = false;
+    loadAll();
+  } else {
+    err.textContent = r.error || 'Ошибка';
+    err.classList.remove('hidden');
+  }
+}
+
+async function deletePromo(code) {
+  if (!confirm(`Удалить промокод ${code}?`)) return;
+  const r = await api('/api/admin/promo/delete', { code });
+  if (r.ok) { showToast('Удалён'); loadAll(); }
+  else alert(r.error || 'Ошибка');
+}
+
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'fixed bottom-6 right-6 bg-[#00eefc] text-[#005d63] px-4 py-2 rounded-xl font-semibold z-50';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
 }
 
 function renderStats(data) {
@@ -264,6 +590,49 @@ document.getElementById('logout-btn').onclick = () => {
   showLogin();
 };
 document.getElementById('search').addEventListener('input', renderUsers);
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+  };
+});
+
+// Payments filter
+document.getElementById('payments-filter').onchange = loadAll;
+
+// Quick actions
+document.getElementById('quick-ext-btn').onclick = () => {
+  const email = document.getElementById('quick-ext-email').value.trim();
+  const days = parseInt(document.getElementById('quick-ext-days').value || '0', 10);
+  if (!email || days <= 0) return alert('Нужен email и дни > 0');
+  quickExtend(email, days);
+  document.getElementById('quick-ext-email').value = '';
+  document.getElementById('quick-ext-days').value = '';
+};
+document.getElementById('quick-unl-btn').onclick = () => {
+  const email = document.getElementById('quick-unl-email').value.trim();
+  if (!email) return alert('Нужен email');
+  quickUnlimited(email, true);
+  document.getElementById('quick-unl-email').value = '';
+};
+document.getElementById('quick-unl-off-btn').onclick = () => {
+  const email = document.getElementById('quick-unl-email').value.trim();
+  if (!email) return alert('Нужен email');
+  quickUnlimited(email, false);
+  document.getElementById('quick-unl-email').value = '';
+};
+document.getElementById('quick-rev-btn').onclick = () => {
+  const email = document.getElementById('quick-rev-email').value.trim();
+  if (!email) return alert('Нужен email');
+  quickRevoke(email);
+  document.getElementById('quick-rev-email').value = '';
+};
+
+document.getElementById('promo-create-btn').onclick = createPromo;
 
 // Auto-login если пароль уже в sessionStorage
 if (adminPass) showDashboard();
