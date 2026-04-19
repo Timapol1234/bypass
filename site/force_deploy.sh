@@ -47,14 +47,17 @@ print("  secrets.json updated")
 PYEOF
 
 echo ""
-echo ">>> 5. Копирую свежий код в /opt/vpn-site/"
+echo ">>> 5. Копирую свежий код"
+mkdir -p /opt/vpn-site/static
 cp "$DEPLOY_DIR/site/app.py" /opt/vpn-site/
 cp "$DEPLOY_DIR/site/hysteria_config.py" /opt/vpn-site/
-cp "$DEPLOY_DIR/site/index.html" /opt/vpn-site/
+# Flask сервит из /opt/vpn-site/static/, не из /opt/vpn-site/!
+cp "$DEPLOY_DIR/site/index.html" /opt/vpn-site/static/index.html
+echo "  скопировано в /opt/vpn-site/static/index.html"
 
 echo ""
 echo ">>> 6. Проверяю md5 (должны совпасть)"
-md5sum "$DEPLOY_DIR/site/index.html" /opt/vpn-site/index.html
+md5sum "$DEPLOY_DIR/site/index.html" /opt/vpn-site/static/index.html
 
 echo ""
 echo ">>> 7. Перезапускаю vpn-site"
