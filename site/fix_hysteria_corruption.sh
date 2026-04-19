@@ -39,8 +39,13 @@ sleep 2
 systemctl is-active vpn-site && echo "  vpn-site активен"
 
 echo ""
-echo ">>> 4. Перезаливаю install_hysteria.sh + запускаю на каждом сервере"
-for key in amsterdam usa finland france; do
+echo ">>> 4. Запускаю install_hysteria.sh локально на Амстердаме"
+bash "$DEPLOY_DIR/site/install_hysteria.sh" 2>&1 | tail -20
+echo "  статус hysteria-server на amsterdam: $(systemctl is-active hysteria-server)"
+
+echo ""
+echo ">>> 5. Перезаливаю install_hysteria.sh + запускаю на удалённых серверах"
+for key in usa finland france; do
     ip="${SERVERS[$key]}"
     echo ""
     echo "--- $key ($ip) ---"
@@ -59,9 +64,16 @@ for key in amsterdam usa finland france; do
 done
 
 echo ""
-echo ">>> 5. Проверка: есть ли дубликаты __seed__ в любом конфиге"
+echo ">>> 6. Проверка: есть ли дубликаты __seed__ в любом конфиге"
 FOUND_DUPES=0
-for key in amsterdam usa finland france; do
+
+# amsterdam — локально
+count=$(grep -c '__seed__' /etc/hysteria/config.yaml || echo "?")
+echo "  amsterdam: __seed__ встречается $count раз (должен быть 1)"
+if [ "$count" != "1" ]; then FOUND_DUPES=1; fi
+
+# остальные — по ssh
+for key in usa finland france; do
     ip="${SERVERS[$key]}"
     count=$(ssh -n "root@$ip" "grep -c '__seed__' /etc/hysteria/config.yaml" || echo "?")
     echo "  $key: __seed__ встречается $count раз (должен быть 1)"
