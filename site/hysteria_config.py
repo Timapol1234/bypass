@@ -103,9 +103,9 @@ def _format_users(users: Dict[str, str]) -> str:
 
 
 def _replace_users_block(config_text: str, new_block: str) -> str:
-    """Заменяет содержимое между маркерами."""
+    """Заменяет содержимое между маркерами. Работает и когда между ними пусто."""
     pattern = re.compile(
-        r'(\s*#\s*BYPASS-USERS-BEGIN\s*\n).*?(\n\s*#\s*BYPASS-USERS-END)',
+        r'(#\s*BYPASS-USERS-BEGIN[^\n]*\n)(.*?)([ \t]*#\s*BYPASS-USERS-END)',
         re.DOTALL,
     )
     if not pattern.search(config_text):
@@ -113,8 +113,8 @@ def _replace_users_block(config_text: str, new_block: str) -> str:
             "в конфиге Hysteria нет маркеров BYPASS-USERS-BEGIN/END — "
             "перезапусти install_hysteria.sh на этом сервере"
         )
-    replacement = r'\1' + (new_block + "\n" if new_block else "") + r'\2'
-    return pattern.sub(replacement, config_text, count=1)
+    middle = (new_block + "\n") if new_block else ""
+    return pattern.sub(lambda m: m.group(1) + middle + m.group(3), config_text, count=1)
 
 
 def _write_config_and_reload(server: dict, new_text: str):
