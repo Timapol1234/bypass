@@ -1487,6 +1487,61 @@ def admin_servers_stats():
     })
 
 
+BACKUP_SCRIPT = "/opt/vpn-site/backup.sh"
+BACKUP_DIR = "/opt/vpn-site/backups"
+
+
+@app.route("/api/admin/backups", methods=["POST"])
+def admin_backups_list():
+    """Список локальных бэкапов."""
+    data, err = _require_admin()
+    if err: return err
+
+    items = []
+    if os.path.isdir(BACKUP_DIR):
+        for name in os.listdir(BACKUP_DIR):
+            if not (name.startswith("bypass-backup-") and name.endswith(".tar.gz")):
+                continue
+            path = os.path.join(BACKUP_DIR, name)
+            try:
+                st = os.stat(path)
+                items.append({
+                    "name": name,
+                    "size": st.st_size,
+                    "mtime": int(st.st_mtime),
+                })
+            except OSError:
+                continue
+    items.sort(key=lambda x: x["mtime"], reverse=True)
+    return jsonify({"backups": items, "dir": BACKUP_DIR})
+
+
+@app.route("/api/admin/backup-now", methods=["POST"])
+def admin_backup_now():
+    """Запуск бэкапа вручную. Ничего не перезапускает — читает JSON и копирует."""
+    data, err = _require_admin()
+    if err: return err
+
+    if not os.path.isfile(BACKUP_SCRIPT):
+        return jsonify({"error": f"Скрипт не найден: {BACKUP_SCRIPT}"}), 500
+
+    try:
+        proc = subprocess.run(
+            ["bash", BACKUP_SCRIPT],
+            capture_output=True, text=True, timeout=300
+        )
+        return jsonify({
+            "ok": proc.returncode == 0,
+            "returncode": proc.returncode,
+            "stdout": proc.stdout[-4000:],
+            "stderr": proc.stderr[-2000:],
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "Бэкап не уложился в 5 минут"}), 504
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/delete", methods=["POST"])
 def delete_user():
     data = request.json
