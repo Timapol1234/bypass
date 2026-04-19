@@ -247,20 +247,39 @@
 <p id="result-info" class="text-on-surface-variant mt-2"></p>
 </div>
 
+<div id="proto-tabs" class="flex gap-2 mb-4 justify-center flex-wrap">
+<button data-proto="vless" class="proto-tab primary-gradient text-on-primary px-4 py-1.5 rounded-full text-xs font-semibold">VLESS</button>
+<button data-proto="hysteria" id="hy2-tab-btn" class="proto-tab bg-surface-container text-on-surface-variant px-4 py-1.5 rounded-full text-xs font-semibold hidden">Hysteria 2</button>
+</div>
+
+<div id="proto-vless" class="proto-content">
 <div class="qr-container text-center mb-6">
 <img id="qr-img" src="" alt="QR Code" class="inline-block bg-white p-2 rounded-xl w-40 h-40">
 </div>
-
 <div class="bg-surface-container-high rounded-xl p-4 mb-4">
 <label class="text-primary text-xs font-bold uppercase tracking-wider">VLESS ключ</label>
 <div id="vless-url" class="text-sm text-on-surface-variant break-all mt-1 font-mono"></div>
 <button class="copy-btn mt-3 bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-semibold w-full" onclick="copyText('vless-url', this)">Скопировать</button>
+</div>
+</div>
+
+<div id="proto-hysteria" class="proto-content hidden">
+<div class="qr-container text-center mb-6">
+<img id="hy2-qr-img" src="" alt="QR Code" class="inline-block bg-white p-2 rounded-xl w-40 h-40">
+</div>
+<div class="bg-surface-container-high rounded-xl p-4 mb-2">
+<label class="text-primary text-xs font-bold uppercase tracking-wider">Hysteria 2 ключ</label>
+<div id="hy2-url" class="text-sm text-on-surface-variant break-all mt-1 font-mono"></div>
+<button class="copy-btn mt-3 bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-semibold w-full" onclick="copyText('hy2-url', this)">Скопировать</button>
+</div>
+<div class="text-xs text-on-surface-variant mb-4 px-1">Hysteria 2 — запасной протокол по UDP. Используй, если VLESS не подключается или режет скорость. Клиенты: Hiddify, V2Box (iOS≥1.4), NekoBox, Streisand.</div>
 </div>
 
 <div class="bg-surface-container-high rounded-xl p-4 mb-4">
 <label class="text-primary text-xs font-bold uppercase tracking-wider">Ссылка подписки</label>
 <div id="sub-url" class="text-sm text-on-surface-variant break-all mt-1 font-mono"></div>
 <button class="copy-btn mt-3 bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-semibold w-full" onclick="copyText('sub-url', this)">Скопировать</button>
+<div class="text-xs text-on-surface-variant mt-2">В подписку зашиты оба протокола — клиент выберет рабочий автоматически.</div>
 </div>
 
 <div class="bg-surface-container-high rounded-xl p-4">
@@ -849,9 +868,38 @@ function showResult(data, toastMessage) {
     document.getElementById('vless-url').textContent = data.vless_url;
     document.getElementById('sub-url').textContent = data.sub_url;
     document.getElementById('result-info').textContent = `${data.username} — ${data.server_name || data.server}`;
+
+    const hy2Tab = document.getElementById('hy2-tab-btn');
+    if (data.hysteria_url) {
+        document.getElementById('hy2-qr-img').src = 'data:image/png;base64,' + data.hysteria_qr;
+        document.getElementById('hy2-url').textContent = data.hysteria_url;
+        hy2Tab.classList.remove('hidden');
+    } else {
+        hy2Tab.classList.add('hidden');
+    }
+    switchProtoTab('vless');
+
     window.scrollTo({ top: document.getElementById('result-section').offsetTop - 80, behavior: 'smooth' });
     if (toastMessage) showToast(toastMessage, 'success');
 }
+
+function switchProtoTab(proto) {
+    document.querySelectorAll('.proto-tab').forEach(b => {
+        const active = b.dataset.proto === proto;
+        b.classList.toggle('primary-gradient', active);
+        b.classList.toggle('text-on-primary', active);
+        b.classList.toggle('bg-surface-container', !active);
+        b.classList.toggle('text-on-surface-variant', !active);
+    });
+    document.querySelectorAll('.proto-content').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById('proto-' + proto);
+    if (target) target.classList.remove('hidden');
+}
+
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.proto-tab');
+    if (btn) switchProtoTab(btn.dataset.proto);
+});
 
 function escapeHtml(s) {
     return String(s == null ? '' : s)

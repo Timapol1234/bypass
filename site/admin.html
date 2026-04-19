@@ -690,6 +690,10 @@ function renderServers(servers, meta) {
     const memTotalGb = s.mem_total ? (s.mem_total / 1073741824).toFixed(2) : null;
     const memPct = (s.mem_total && s.mem_used) ? Math.round((s.mem_used / s.mem_total) * 100) : null;
     const xrayStatus = s.xray_active ? '<span class="text-[#00eefc]">active</span>' : (s.xray_active === false ? '<span class="text-[#ff716c]">stopped</span>' : '—');
+    const hy2Status = s.hysteria_installed === false
+        ? '<span class="text-[#a9abb3]">не установлен</span>'
+        : (s.hysteria_active ? '<span class="text-[#00eefc]">active</span>'
+           : (s.hysteria_active === false ? '<span class="text-[#ff716c]">stopped</span>' : '—'));
     return `
       <div class="bg-[#161a21] rounded-2xl p-5 border border-[#22262f]">
         <div class="flex items-start justify-between mb-4">
@@ -710,9 +714,10 @@ function renderServers(servers, meta) {
             <div class="text-[10px] text-[#a9abb3]">активных ${s.users_active} · Xray ${s.xray_clients != null ? s.xray_clients : '—'}${s.full ? ' · <span style="color:#ff716c">заполнен</span>' : ''}</div>
           </div>
           <div class="bg-[#0b0e14] rounded-lg p-3">
-            <div class="text-[10px] text-[#a9abb3] uppercase">Xray</div>
+            <div class="text-[10px] text-[#a9abb3] uppercase">Xray / Hy2</div>
             <div class="font-semibold text-base">${escapeHtml(s.xray_version || '—')}</div>
-            <div class="text-[10px]">${xrayStatus} · порт ${s.xray_port || s.port}</div>
+            <div class="text-[10px]">Xray: ${xrayStatus}</div>
+            <div class="text-[10px]">Hy2: ${hy2Status}</div>
           </div>
           <div class="bg-[#0b0e14] rounded-lg p-3">
             <div class="text-[10px] text-[#a9abb3] uppercase">Load avg</div>

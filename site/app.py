@@ -16,6 +16,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 
+import hysteria_config
+
 app = Flask(__name__, static_folder='static')
 
 XRAY_CONFIG = "/usr/local/etc/xray/config.json"
@@ -491,6 +493,39 @@ def save_promo_codes(codes):
     _save_json(PROMO_CODES_DB, codes)
 
 
+def add_to_hysteria_safe(server_key, username):
+    """Добавляет юзера в Hysteria 2. Best-effort: при ошибке логирует и возвращает None.
+    Сервер VLESS от этого не страдает — Hy2 это отдельный протокол поверх."""
+    try:
+        s = SERVERS[server_key]
+        password = hysteria_config.generate_password()
+        hysteria_config.add_user(s, username, password)
+        return password
+    except Exception as e:
+        print(f"[hysteria] add_user({server_key}, {username}) failed: {e}")
+        return None
+
+
+def remove_from_hysteria_safe(server_key, username):
+    """Удаляет юзера из Hysteria. Best-effort."""
+    try:
+        s = SERVERS[server_key]
+        hysteria_config.remove_user(s, username)
+    except Exception as e:
+        print(f"[hysteria] remove_user({server_key}, {username}) failed: {e}")
+
+
+def build_hysteria_url(server_key, username, password):
+    """Строит hysteria2:// URL или None если не удалось (obfs password недоступен)."""
+    if not password:
+        return None
+    try:
+        return hysteria_config.build_uri(server_key, SERVERS[server_key], username, password)
+    except Exception as e:
+        print(f"[hysteria] build_uri({server_key}, {username}) failed: {e}")
+        return None
+
+
 def build_vless_url(user_uuid, server_key, name):
     s = SERVERS[server_key]
     return (
@@ -652,6 +687,14 @@ def collect_server_metrics(server_key):
         "    out['xray_active'] = (r.stdout.strip() == 'active')\n"
         "except Exception: out['xray_active'] = None\n"
         "try:\n"
+        "    r = subprocess.run(['systemctl','is-active','hysteria-server'], capture_output=True, text=True, timeout=3)\n"
+        "    out['hysteria_active'] = (r.stdout.strip() == 'active')\n"
+        "    r2 = subprocess.run(['systemctl','list-unit-files','hysteria-server.service'], capture_output=True, text=True, timeout=3)\n"
+        "    out['hysteria_installed'] = 'hysteria-server' in (r2.stdout or '')\n"
+        "except Exception:\n"
+        "    out['hysteria_active'] = None\n"
+        "    out['hysteria_installed'] = None\n"
+        "try:\n"
         f"    with open({config_path!r}) as f: c = json.load(f)\n"
         "    ib = next(i for i in c['inbounds'] if i.get('protocol') == 'vless')\n"
         "    out['xray_clients'] = len(ib['settings']['clients'])\n"
@@ -725,10 +768,15 @@ def sub_slug(username, user_uuid):
     return f"{username.lower()}_{user_uuid.split('-')[0]}"
 
 
-def update_subscription(user_uuid, server_key, username):
+def update_subscription(user_uuid, server_key, username, hysteria_password=None):
+    """Пишет файл подписки. Если передан hysteria_password — добавляет hysteria2:// URL
+    рядом с VLESS (клиент импортирует оба, выберет рабочий)."""
     os.makedirs(SUB_DIR, exist_ok=True)
-    url = build_vless_url(user_uuid, server_key, f"VPN-{username}")
-    encoded = base64.b64encode(url.encode()).decode()
+    urls = [build_vless_url(user_uuid, server_key, f"VPN-{username}")]
+    hy2 = build_hysteria_url(server_key, username, hysteria_password)
+    if hy2:
+        urls.append(hy2)
+    encoded = base64.b64encode("\n".join(urls).encode()).decode()
     filepath = os.path.join(SUB_DIR, sub_slug(username, user_uuid))
     with open(filepath, "w") as f:
         f.write(encoded)
@@ -769,13 +817,14 @@ def get_servers():
     return jsonify(result)
 
 def build_key_data(user):
-    """Собирает всё, что нужно фронту для показа ключа: URL, подписка, QR, мета."""
+    """Собирает всё, что нужно фронту для показа ключа: URL, подписка, QR, мета.
+    Если у юзера есть hysteria_password — добавляет hysteria2:// URL и QR."""
     server_key = user["server"]
     username = user["username"]
     s = SERVERS[server_key]
     vless_url = build_vless_url(user["uuid"], server_key, f"VPN-{username}")
     sub_url = f"http://{SUB_HOST}/sub/{sub_slug(username, user['uuid'])}"
-    return {
+    data = {
         "username": username,
         "server": server_key,
         "server_name": s["name"],
@@ -784,7 +833,16 @@ def build_key_data(user):
         "vless_url": vless_url,
         "sub_url": sub_url,
         "qr": generate_qr_base64(vless_url),
+        "hysteria_url": None,
+        "hysteria_qr": None,
     }
+    hy_pw = user.get("hysteria_password")
+    if hy_pw:
+        hy_url = build_hysteria_url(server_key, username, hy_pw)
+        if hy_url:
+            data["hysteria_url"] = hy_url
+            data["hysteria_qr"] = generate_qr_base64(hy_url)
+    return data
 
 
 @app.route("/api/create", methods=["POST"])
@@ -826,8 +884,10 @@ def create_key():
     except Exception as e:
         return jsonify({"error": f"Ошибка Xray: {str(e)}"}), 500
 
+    hysteria_password = add_to_hysteria_safe(server_key, username)
+
     try:
-        update_subscription(user_uuid, server_key, username)
+        update_subscription(user_uuid, server_key, username, hysteria_password)
     except Exception as e:
         return jsonify({"error": f"Ошибка подписки: {str(e)}"}), 500
 
@@ -838,6 +898,7 @@ def create_key():
         "email": session["email"],
         "created": datetime.now().isoformat(),
         "in_xray": True,
+        "hysteria_password": hysteria_password,
     }
     users.append(user_entry)
     save_users(users)
@@ -881,6 +942,8 @@ def delete_my_key():
         remove_from_xray(user["uuid"], user["server"])
     except Exception as e:
         return jsonify({"error": f"Ошибка Xray: {str(e)}"}), 500
+
+    remove_from_hysteria_safe(user["server"], user["username"])
 
     sub_path = os.path.join(SUB_DIR, sub_slug(user["username"], user["uuid"]))
     if os.path.exists(sub_path):
@@ -942,6 +1005,7 @@ def replace_my_key():
             remove_from_xray(old["uuid"], old["server"])
         except Exception as e:
             return jsonify({"error": f"Ошибка Xray (удаление старого): {str(e)}"}), 500
+        remove_from_hysteria_safe(old["server"], old["username"])
         old_sub_path = os.path.join(SUB_DIR, sub_slug(old["username"], old["uuid"]))
         if os.path.exists(old_sub_path):
             os.remove(old_sub_path)
@@ -954,8 +1018,10 @@ def replace_my_key():
         save_users(users)
         return jsonify({"error": f"Ошибка Xray (создание нового): {str(e)}"}), 500
 
+    hysteria_password = add_to_hysteria_safe(server_key, new_username)
+
     try:
-        update_subscription(new_uuid, server_key, new_username)
+        update_subscription(new_uuid, server_key, new_username, hysteria_password)
     except Exception as e:
         save_users(users)
         return jsonify({"error": f"Ошибка подписки: {str(e)}"}), 500
@@ -967,6 +1033,7 @@ def replace_my_key():
         "email": session["email"],
         "created": datetime.now().isoformat(),
         "in_xray": True,
+        "hysteria_password": hysteria_password,
     }
     users.append(entry)
     save_users(users)
@@ -1342,7 +1409,19 @@ def _sync_user_xray_state(email):
         if active and not in_xray:
             try:
                 add_to_xray(u["uuid"], server_key, username)
-                update_subscription(u["uuid"], server_key, username)
+                # При восстановлении — создаём новый Hy2-пароль, если его не было
+                hy_pw = u.get("hysteria_password")
+                if not hy_pw:
+                    hy_pw = add_to_hysteria_safe(server_key, username)
+                    if hy_pw:
+                        u["hysteria_password"] = hy_pw
+                else:
+                    # Пароль был — заново добавляем юзера на сервер Hy2 (старый пароль)
+                    try:
+                        hysteria_config.add_user(SERVERS[server_key], username, hy_pw)
+                    except Exception as e:
+                        print(f"[hysteria] restore {username} failed: {e}")
+                update_subscription(u["uuid"], server_key, username, hy_pw)
                 u["in_xray"] = True
                 changed = True
                 print(f"[sub-sync] restored {username} ({email})")
@@ -1352,6 +1431,7 @@ def _sync_user_xray_state(email):
         elif not active and in_xray:
             try:
                 remove_from_xray(u["uuid"], server_key)
+                remove_from_hysteria_safe(server_key, username)
                 sub_path = os.path.join(SUB_DIR, sub_slug(username, u["uuid"]))
                 if os.path.exists(sub_path):
                     os.remove(sub_path)
@@ -1592,6 +1672,7 @@ def serve_subscription(filename):
 ISSUE_LABELS = {
     "offline": "Сервер не отвечает",
     "xray_stopped": "Xray остановлен",
+    "hysteria_stopped": "Hysteria 2 остановлен",
     "overload": f"Перегрузка CPU (load > {ALERT_LOAD_RATIO}× ядер)",
     "mem_high": f"Память занята > {ALERT_MEM_PCT}%",
 }
@@ -1614,13 +1695,16 @@ def _save_json(path, data):
 
 
 def compute_server_issues(s):
-    """Возвращает отсортированный список кодов проблем для метрик сервера."""
+    """Возвращает отсортированный список кодов проблем для метрик сервера.
+    hysteria_stopped проверяется только если протокол установлен — иначе его отсутствие не алерт."""
     issues = []
     if not s.get("online"):
         issues.append("offline")
     else:
         if s.get("xray_active") is False:
             issues.append("xray_stopped")
+        if s.get("hysteria_installed") and s.get("hysteria_active") is False:
+            issues.append("hysteria_stopped")
         load = s.get("load_1m")
         cpu = s.get("cpu_count") or 1
         if load is not None and cpu and (load / cpu) > ALERT_LOAD_RATIO:
