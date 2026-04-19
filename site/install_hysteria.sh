@@ -63,9 +63,17 @@ fi
 
 # 4. Сохраняем существующих userpass-юзеров (если конфиг уже в каноническом формате BYPASS)
 EXISTING_USERS=""
-if [ -f "$CONFIG" ] && grep -q "# BYPASS-USERS-BEGIN" "$CONFIG"; then
+# Маркер — это строка, равная ровно "# BYPASS-USERS-BEGIN" (с любым отступом).
+# Подстрочное сравнение ломается на шапке-комментарии, где эти слова тоже встречаются.
+if [ -f "$CONFIG" ] && grep -qE '^[[:space:]]*# BYPASS-USERS-BEGIN[[:space:]]*$' "$CONFIG"; then
     echo "[4/8] Извлекаю существующих BYPASS-юзеров..."
-    EXISTING_USERS=$(awk '/# BYPASS-USERS-BEGIN/{flag=1;next} /# BYPASS-USERS-END/{flag=0} flag' "$CONFIG" || true)
+    # Извлекаем блок между маркерами и фильтруем мусор, который мог туда попасть
+    # из-за старого бага (__seed__/password обфускации).
+    EXISTING_USERS=$(awk '
+        /^[[:space:]]*# BYPASS-USERS-BEGIN[[:space:]]*$/ {flag=1; next}
+        /^[[:space:]]*# BYPASS-USERS-END[[:space:]]*$/   {flag=0}
+        flag
+    ' "$CONFIG" | grep -vE '^[[:space:]]+(__seed__|password)[[:space:]]*:' || true)
     USER_COUNT=$(echo "$EXISTING_USERS" | grep -c ":" || true)
     echo "    Найдено юзеров: $USER_COUNT"
 else

@@ -65,15 +65,21 @@ def _read_config(server: dict) -> str:
 
 
 def _extract_users_block(config_text: str) -> List[str]:
-    """Возвращает строки между BEGIN/END (без маркеров)."""
+    """Возвращает строки между BEGIN/END (без маркеров).
+
+    Маркер — это строка-комментарий, состоящая ТОЛЬКО из `# BYPASS-USERS-BEGIN`
+    (или END). Подстрочное сравнение ломается, если в конфиге есть комментарий-
+    пояснение, упоминающий маркеры (например, шапка файла).
+    """
     lines = config_text.splitlines()
     out = []
     in_block = False
     for ln in lines:
-        if "BYPASS-USERS-BEGIN" in ln:
+        stripped = ln.strip()
+        if stripped == "# BYPASS-USERS-BEGIN":
             in_block = True
             continue
-        if "BYPASS-USERS-END" in ln:
+        if stripped == "# BYPASS-USERS-END":
             in_block = False
             continue
         if in_block:
@@ -82,12 +88,22 @@ def _extract_users_block(config_text: str) -> List[str]:
 
 
 def _parse_users(user_lines: List[str]) -> Dict[str, str]:
-    """Парсит строки вида '    username: password' в dict."""
+    """Парсит строки вида '    username: password' в dict.
+
+    Защищаемся от мусора, который мог попасть внутрь BEGIN/END маркеров из-за
+    старых багов: пропускаем зарезервированные ключи (__seed__) и ключи конфига
+    Hysteria (password от salamander), которые не являются именами юзеров.
+    """
+    reserved = {"__seed__", "password", "type", "url", "cert", "key",
+                "listen", "obfs", "salamander", "auth", "userpass"}
     users = {}
     for ln in user_lines:
         m = re.match(r'\s{4,}([^:#\s]+)\s*:\s*(.+?)\s*$', ln)
         if m:
-            users[m.group(1)] = m.group(2).strip().strip('"').strip("'")
+            name = m.group(1)
+            if name.startswith("__") or name in reserved:
+                continue
+            users[name] = m.group(2).strip().strip('"').strip("'")
     return users
 
 
