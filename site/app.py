@@ -155,13 +155,52 @@ if not ADMIN_PASSWORD:
 if not SMTP_CONFIG["password"]:
     print("WARNING: smtp_password не задан — отправка email работать не будет")
 
-# CORS поддержка
+# CORS: отвечаем заголовками только своему origin'у. Без `*` — иначе любой сторонний
+# сайт мог бы делать POST /api/create с угнанным токеном.
+ALLOWED_ORIGINS = {
+    "http://109.248.162.180:8080",
+    "https://109.248.162.180:8080",
+}
+
+
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    origin = request.headers.get("Origin")
+    if origin and origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
+
+
+# Rate-limit для admin-логина: in-memory, per-IP. Сбрасывается при рестарте Flask,
+# но этого достаточно — перезапуск ломает и брутфорсер тоже.
+_ADMIN_BRUTE_WINDOW = 900  # 15 мин
+_ADMIN_BRUTE_LIMIT = 5
+_admin_login_fails: dict = {}
+_admin_fails_lock = threading.Lock()
+
+
+def _admin_brute_check(ip: str):
+    """True, 0 — можно пробовать; False, wait_seconds — надо подождать."""
+    now = time.time()
+    with _admin_fails_lock:
+        fails = [t for t in _admin_login_fails.get(ip, []) if now - t < _ADMIN_BRUTE_WINDOW]
+        _admin_login_fails[ip] = fails
+        if len(fails) >= _ADMIN_BRUTE_LIMIT:
+            return False, int(_ADMIN_BRUTE_WINDOW - (now - min(fails)))
+        return True, 0
+
+
+def _admin_brute_register_fail(ip: str):
+    with _admin_fails_lock:
+        _admin_login_fails.setdefault(ip, []).append(time.time())
+
+
+def _admin_brute_clear(ip: str):
+    with _admin_fails_lock:
+        _admin_login_fails.pop(ip, None)
 
 def load_verification_codes():
     if os.path.exists(VERIFICATION_CODES_DB):
@@ -319,15 +358,29 @@ def verify_code():
     
     code_data = codes[email]
     expires = datetime.fromisoformat(code_data["expires"])
-    
+
     if datetime.now() > expires:
         del codes[email]
         save_verification_codes(codes)
         return jsonify({"error": "Код истек"}), 400
-    
+
+    # Brute-force защита: 5 попыток на один код, потом код инвалидируется.
+    # Иначе атакующий перебирает 1М шестизначных кодов за минуты.
+    attempts = code_data.get("attempts", 0)
+    if attempts >= 5:
+        del codes[email]
+        save_verification_codes(codes)
+        return jsonify({"error": "Слишком много попыток. Запросите код заново."}), 429
+
     if code_data["code"] != code:
-        return jsonify({"error": "Неверный код"}), 400
-    
+        code_data["attempts"] = attempts + 1
+        codes[email] = code_data
+        save_verification_codes(codes)
+        remaining = 5 - code_data["attempts"]
+        if remaining <= 0:
+            return jsonify({"error": "Неверный код. Код инвалидирован, запросите новый."}), 400
+        return jsonify({"error": f"Неверный код. Осталось попыток: {remaining}"}), 400
+
     del codes[email]
     save_verification_codes(codes)
 
@@ -1489,10 +1542,28 @@ def admin_page():
 
 @app.route("/api/admin/login", methods=["POST"])
 def admin_login():
+    ip = request.remote_addr or "unknown"
+    allowed, wait = _admin_brute_check(ip)
+    if not allowed:
+        mins = wait // 60 + 1
+        return jsonify({"error": f"Слишком много попыток. Подождите ~{mins} мин."}), 429
     data = request.json or {}
     if _is_admin(data):
+        _admin_brute_clear(ip)
         return jsonify({"ok": True})
+    _admin_brute_register_fail(ip)
     return jsonify({"error": "Неверный пароль"}), 403
+
+
+@app.route("/api/health", methods=["GET"])
+def health():
+    """Публичный healthcheck для внешнего мониторинга. Если Flask умер —
+    endpoint не ответит вообще; если что-то сломано внутри — вернём 500."""
+    try:
+        load_users()
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"users.json: {e}"}), 500
+    return jsonify({"ok": True, "ts": int(time.time())}), 200
 
 
 def load_traffic_snapshot():
