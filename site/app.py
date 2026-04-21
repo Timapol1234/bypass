@@ -1094,7 +1094,14 @@ def exec_python_on_server(server_key, script):
         cmd = ["ssh", "-o", "StrictHostKeyChecking=no", s["ssh"], "python3", "-"]
     else:
         cmd = ["python3", "-"]
-    r = subprocess.run(cmd, input=script, capture_output=True, text=True, check=True)
+    r = subprocess.run(cmd, input=script, capture_output=True, text=True)
+    if r.returncode != 0:
+        # дефолтный CalledProcessError не печатает stderr — делаем это сами,
+        # иначе в админке видно только "returned non-zero exit status 1".
+        raise RuntimeError(
+            f"python3 on {server_key} exit={r.returncode}: "
+            f"{(r.stderr or r.stdout or '<no output>').strip()[:800]}"
+        )
     return r.stdout
 
 
