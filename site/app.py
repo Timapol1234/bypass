@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, Response
 import uuid
 import json
 import subprocess
@@ -11,6 +11,8 @@ import secrets
 import re
 import threading
 import time
+from functools import wraps
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -487,9 +489,138 @@ def after_request(response):
     if origin and origin in ALLOWED_ORIGINS:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Vary"] = "Origin"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Idempotency-Key"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
+
+
+# --- Rate-limiting / IP throttle / Idempotency ---------------------------
+
+# Глобальный IP-лимит: сколько запросов в минуту на API может делать один IP,
+# до того как начнём отдавать 429. Защищает от ботов, которые шарят все ручки.
+GLOBAL_IP_REQ_PER_MIN = 120
+GLOBAL_IP_WINDOW = 60
+
+# Per-endpoint лимитеры. Декораторы @rate_limit.
+_rate_buckets: dict = {}  # key -> deque[float timestamps]
+_rate_lock = threading.Lock()
+
+# Idempotency cache (Idempotency-Key header на мутирующих ручках). TTL 10 мин.
+IDEM_TTL = 600
+IDEM_MAX_KEYS = 10000
+_idem_cache: dict = {}   # key -> (body_bytes, status_int, expires_at)
+_idem_lock = threading.Lock()
+
+# Endpoint'ы, которые не надо троттлить глобально (health для мониторинга,
+# hy-auth — его дёргает сама Hysteria, может быть очень часто).
+_IP_THROTTLE_EXEMPT_PATHS = {"/api/health", "/api/hy-auth"}
+
+
+def _get_client_ip() -> str:
+    """Клиентский IP — первый из X-Forwarded-For (если сайт за прокси/CF/Vercel),
+    иначе X-Real-IP, иначе remote_addr."""
+    xff = request.headers.get("X-Forwarded-For", "")
+    if xff:
+        return xff.split(",")[0].strip()
+    xr = request.headers.get("X-Real-IP", "")
+    if xr:
+        return xr.strip()
+    return request.remote_addr or "unknown"
+
+
+def _bucket_hit(bucket_key: str, limit: int, window: int):
+    """True, 0 — OK; False, retry_after_sec — переполнено."""
+    now = time.time()
+    with _rate_lock:
+        bucket = _rate_buckets.setdefault(bucket_key, deque())
+        while bucket and bucket[0] < now - window:
+            bucket.popleft()
+        if len(bucket) >= limit:
+            retry = int(bucket[0] + window - now) + 1
+            return False, max(retry, 1)
+        bucket.append(now)
+        return True, 0
+
+
+def rate_limit(limit: int, window: int = 60, scope: str = "ip"):
+    """Per-IP (scope='ip') или per-IP+endpoint (scope='endpoint') лимит.
+    Возвращает 429 с Retry-After заголовком при переполнении."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            ip = _get_client_ip()
+            key = f"rl:{scope}:{func.__name__}:{ip}" if scope == "endpoint" \
+                  else f"rl:ip:{func.__name__}:{ip}"
+            ok, retry = _bucket_hit(key, limit, window)
+            if not ok:
+                resp = jsonify({"error": "Слишком много запросов, попробуйте позже",
+                                "retry_after": retry})
+                resp.status_code = 429
+                resp.headers["Retry-After"] = str(retry)
+                return resp
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def idempotent(func):
+    """Кэширует ответ по (endpoint + IP + Idempotency-Key header) на IDEM_TTL.
+    Если заголовка нет — проходит мимо (обратная совместимость). 5xx не кэшируется."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        idem = (request.headers.get("Idempotency-Key") or "").strip()
+        if not idem or len(idem) > 128:
+            return func(*args, **kwargs)
+        full_key = f"idem:{request.path}:{_get_client_ip()}:{idem}"
+        now = time.time()
+        with _idem_lock:
+            # lazy cleanup: если кэш разросся — выкидываем все протухшие
+            if len(_idem_cache) > IDEM_MAX_KEYS:
+                for k in list(_idem_cache.keys()):
+                    if _idem_cache[k][2] < now:
+                        _idem_cache.pop(k, None)
+            cached = _idem_cache.get(full_key)
+            if cached and cached[2] >= now:
+                body, status, _ = cached
+                return Response(body, status=status, mimetype="application/json")
+        resp = func(*args, **kwargs)
+        # нормализуем: может быть Response / tuple (Response, status) / (dict, status)
+        if isinstance(resp, tuple):
+            r_obj = resp[0]
+            status = int(resp[1]) if len(resp) > 1 else 200
+        else:
+            r_obj = resp
+            status = getattr(resp, "status_code", 200)
+        if hasattr(r_obj, "get_data"):
+            body = r_obj.get_data()
+        elif isinstance(r_obj, (dict, list)):
+            body = json.dumps(r_obj).encode()
+        else:
+            body = str(r_obj).encode()
+        if 200 <= status < 500:
+            with _idem_lock:
+                _idem_cache[full_key] = (body, status, now + IDEM_TTL)
+        return resp
+    return wrapper
+
+
+@app.before_request
+def _global_ip_throttle():
+    """Глобальный IP-троттлинг на API. Не трогает health/hy-auth/статику."""
+    path = request.path or ""
+    if not path.startswith("/api/"):
+        return None
+    if path in _IP_THROTTLE_EXEMPT_PATHS:
+        return None
+    ip = _get_client_ip()
+    ok, retry = _bucket_hit(f"rl:global:{ip}", GLOBAL_IP_REQ_PER_MIN, GLOBAL_IP_WINDOW)
+    if not ok:
+        resp = jsonify({"error": "Слишком много запросов, попробуйте позже",
+                        "retry_after": retry})
+        resp.status_code = 429
+        resp.headers["Retry-After"] = str(retry)
+        return resp
+    return None
 
 
 # Rate-limit для admin-логина: in-memory, per-IP. Сбрасывается при рестарте Flask,
@@ -632,6 +763,7 @@ def send_verification_email(email, code):
         return False
 
 @app.route("/api/send-code", methods=["POST"])
+@rate_limit(5, 60)
 def send_code():
     data = request.json
     email = data.get("email", "").strip().lower()
@@ -667,6 +799,7 @@ def send_code():
         return jsonify({"error": "Ошибка отправки email"}), 500
 
 @app.route("/api/verify-code", methods=["POST"])
+@rate_limit(15, 60)
 def verify_code():
     data = request.json
     email = data.get("email", "").strip()
@@ -714,6 +847,7 @@ def verify_code():
     })
 
 @app.route('/api/verify-session', methods=['POST'])
+@rate_limit(60, 60)
 def verify_session():
     data = request.json or {}
     token = data.get('token', '')
@@ -1254,6 +1388,8 @@ def build_key_data(user):
 
 
 @app.route("/api/create", methods=["POST"])
+@rate_limit(10, 60)
+@idempotent
 def create_key():
     data = request.json
     server_key = data.get("server")
@@ -1329,6 +1465,8 @@ def my_keys():
 
 
 @app.route("/api/my-keys/delete", methods=["POST"])
+@rate_limit(10, 60)
+@idempotent
 def delete_my_key():
     data = request.json or {}
     token = data.get("token", "")
@@ -1368,6 +1506,8 @@ def delete_my_key():
 
 
 @app.route("/api/my-keys/replace", methods=["POST"])
+@rate_limit(10, 60)
+@idempotent
 def replace_my_key():
     """Заменяет конкретный ключ юзера (по old_uuid) на новый. Сервер можно оставить тем же или сменить, но новый не должен быть занят другим ключом того же юзера."""
     data = request.json or {}
@@ -1453,6 +1593,7 @@ def replace_my_key():
 
 
 @app.route("/api/suggest-username", methods=["POST"])
+@rate_limit(30, 60)
 def api_suggest_username():
     data = request.json or {}
     session = get_session(data.get("token", ""))
@@ -1506,6 +1647,8 @@ def api_subscription_status():
 
 
 @app.route("/api/subscription/request", methods=["POST"])
+@rate_limit(5, 60)
+@idempotent
 def api_subscription_request():
     data = request.json or {}
     session = get_session(data.get("token", ""))
@@ -1557,6 +1700,8 @@ def api_subscription_cancel_request():
 
 
 @app.route("/api/promo/redeem", methods=["POST"])
+@rate_limit(10, 60)
+@idempotent
 def api_promo_redeem():
     data = request.json or {}
     session = get_session(data.get("token", ""))
@@ -2125,6 +2270,7 @@ def admin_servers_list():
 
 
 @app.route("/api/admin/servers/add", methods=["POST"])
+@idempotent
 def admin_servers_add():
     """Добавляет сервер: проверяет SSH, ставит xray+hysteria, пишет в servers.json.
 
