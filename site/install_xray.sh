@@ -52,8 +52,12 @@ if [ -z "$PRIV" ] || [ -z "$PBK" ]; then
     echo "[2/5] Генерирую Reality keypair..." >&2
     rm -f "$KEYS_FILE"
     OUT=$(xray x25519)
-    PRIV=$(echo "$OUT" | awk '/Private key:/ {print $3}')
-    PBK=$(echo "$OUT"  | awk '/Public key:/  {print $3}')
+    # Xray <=24 выводит "Private key: <v>" / "Public key: <v>".
+    # Xray 26+ выводит "PrivateKey: <v>" / "Password (PublicKey): <v>".
+    # Берём всё после ": " на строке, содержащей "private key" / "public key"
+    # без учёта регистра и пробела между словами.
+    PRIV=$(echo "$OUT" | awk -F': *' 'tolower($0) ~ /private *key/ {print $2; exit}')
+    PBK=$(echo "$OUT"  | awk -F': *' 'tolower($0) ~ /public *key/  {print $2; exit}')
     if [ -z "$PRIV" ] || [ -z "$PBK" ]; then
         echo "xray x25519 вернул пустые ключи — смотри вывод:" >&2
         echo "$OUT" >&2
