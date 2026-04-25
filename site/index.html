@@ -38,18 +38,18 @@
                     "inverse-on-surface":     "#4A4A4A",
                     "inverse-surface":        "#F0F0F0",
 
-                    // Accent (primary action)
-                    "primary":                "#00EEFC",
-                    "primary-dim":            "#00B8C4",
-                    "primary-fixed":          "#00EEFC",
-                    "primary-fixed-dim":      "#00B8C4",
-                    "primary-container":      "#00EEFC",
+                    // Accent (primary action) — monochrome off-white
+                    "primary":                "#F5F5F5",
+                    "primary-dim":            "#CCCCCC",
+                    "primary-fixed":          "#F5F5F5",
+                    "primary-fixed-dim":      "#CCCCCC",
+                    "primary-container":      "#F5F5F5",
                     "on-primary":             "#000000",
                     "on-primary-container":   "#000000",
                     "on-primary-fixed":       "#000000",
-                    "on-primary-fixed-variant": "#003B40",
-                    "surface-tint":           "#00EEFC",
-                    "inverse-primary":        "#00B8C4",
+                    "on-primary-fixed-variant": "#1A1A1A",
+                    "surface-tint":           "#F5F5F5",
+                    "inverse-primary":        "#CCCCCC",
 
                     // Status
                     "success":                "#00E78B",
@@ -65,20 +65,20 @@
                     "on-tertiary-container":  "#F0F0F0",
                     "on-secondary-container": "#F0F0F0",
                     "secondary-fixed":        "#1A1A1A",
-                    "tertiary-fixed-dim":     "#00EEFC",
-                    "tertiary-dim":           "#00B8C4",
+                    "tertiary-fixed-dim":     "#F5F5F5",
+                    "tertiary-dim":           "#CCCCCC",
                     "secondary-dim":          "#1A1A1A",
                     "secondary":              "#1A1A1A",
                     "secondary-container":    "#1A1A1A",
                     "on-tertiary":            "#000000",
                     "on-secondary-fixed":     "#8A8A8A",
-                    "tertiary-fixed":         "#00EEFC",
+                    "tertiary-fixed":         "#F5F5F5",
                     "secondary-fixed-dim":    "#1A1A1A",
-                    "tertiary-container":     "#00EEFC",
+                    "tertiary-container":     "#F5F5F5",
                     "on-tertiary-fixed":      "#000000",
-                    "on-tertiary-fixed-variant": "#003B40",
+                    "on-tertiary-fixed-variant": "#1A1A1A",
                     "on-secondary-fixed-variant": "#8A8A8A",
-                    "tertiary":               "#00EEFC"
+                    "tertiary":               "#F5F5F5"
             },
             "borderRadius": {
                     "DEFAULT": "0.25rem",
@@ -106,10 +106,12 @@
             --wx-border-soft: #1A1A1A;
             --wx-text: #F0F0F0;
             --wx-text-2: #8A8A8A;
-            --wx-cyan: #00EEFC;
-            --wx-cyan-dim: #00B8C4;
-            --wx-cyan-glow: rgba(0,238,252,.18);
-            --wx-cyan-wash: rgba(0,238,252,.06);
+            /* Accent: monochrome off-white. Variable name kept as --wx-cyan
+               for historical compatibility, but the value is now white. */
+            --wx-cyan: #F5F5F5;
+            --wx-cyan-dim: #CCCCCC;
+            --wx-cyan-glow: rgba(245,245,245,.20);
+            --wx-cyan-wash: rgba(245,245,245,.06);
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -118,8 +120,8 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             background-image:
-                linear-gradient(rgba(0,238,252,.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,238,252,.025) 1px, transparent 1px);
+                linear-gradient(rgba(245,245,245,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(245,245,245,.025) 1px, transparent 1px);
             background-size: 48px 48px;
             background-position: center top;
             background-attachment: fixed;
@@ -135,7 +137,7 @@
             box-shadow: 0 0 24px var(--wx-cyan-glow);
         }
         .wx-glow         { box-shadow: 0 0 32px var(--wx-cyan-glow); }
-        .wx-glow-sm      { box-shadow: 0 0 16px rgba(0,238,252,.12); }
+        .wx-glow-sm      { box-shadow: 0 0 16px rgba(245,245,245,.10); }
         .wx-card {
             background: var(--wx-surface);
             border: 1px solid var(--wx-border-soft);
@@ -153,7 +155,7 @@
         .wx-input:focus {
             outline: none;
             border-color: var(--wx-cyan);
-            box-shadow: 0 0 0 3px rgba(0,238,252,.12);
+            box-shadow: 0 0 0 3px rgba(245,245,245,.10);
         }
         .wx-input::placeholder { color: #4A4A4A; }
         .wx-divider { height: 1px; background: var(--wx-border-soft); }
@@ -166,7 +168,7 @@
             letter-spacing: .12em;
             text-transform: uppercase;
         }
-        .wx-chip-cyan    { background: var(--wx-cyan-wash); color: var(--wx-cyan); border: 1px solid rgba(0,238,252,.3); }
+        .wx-chip-cyan    { background: var(--wx-cyan-wash); color: var(--wx-cyan); border: 1px solid rgba(245,245,245,.3); }
         .wx-chip-success { background: rgba(0,231,139,.08); color: #00E78B; border: 1px solid rgba(0,231,139,.3); }
         .wx-chip-muted   { background: transparent; color: var(--wx-text-2); border: 1px solid var(--wx-border); }
         .hidden { display: none; }
@@ -206,7 +208,7 @@
         .otp-input:focus {
             outline: none;
             border-color: var(--wx-cyan);
-            box-shadow: 0 0 0 3px rgba(0,238,252,.12);
+            box-shadow: 0 0 0 3px rgba(245,245,245,.10);
         }
         .digit-input {} /* legacy hook kept for JS selectors */
         .wx-bottom-fade { background: linear-gradient(180deg, transparent, #000 60%); }

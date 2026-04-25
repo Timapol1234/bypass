@@ -18,14 +18,14 @@ Surface 1             #0A0A0A   raised cards, list rows
 Surface 2             #111111   modals, deepest elevation
 Border subtle         #1A1A1A   row dividers, low-noise edges
 Border default        #2A2A2A   card borders, input idle
-Border accent         #00EEFC   focus, active, hover
+Border accent         #F5F5F5   focus, active, hover
 Text primary          #F0F0F0   body, headlines
 Text secondary        #8A8A8A   metadata, hints
 Text tertiary         #4A4A4A   disabled, placeholders
-Accent / Primary      #00EEFC   primary CTA, active states, links
-Accent dim            #00B8C4   hover/pressed primary
-Accent glow           rgba(0,238,252,.18)   ambient glow under key elements
-Accent wash           rgba(0,238,252,.06)   tinted backgrounds
+Accent / Primary      #F5F5F5   primary CTA (filled), active states, links — monochrome
+Accent dim            #CCCCCC   hover/pressed primary
+Accent glow           rgba(245,245,245,.20)   ambient glow under key elements
+Accent wash           rgba(245,245,245,.06)   tinted backgrounds
 Status success        #00E78B   "active", connected
 Status warning        #FFB020   "expiring soon"
 Status danger         #FF4757   errors, deletions
