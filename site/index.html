@@ -151,14 +151,14 @@
 <input type="email" id="login-email" placeholder="example@mail.com" class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary">
 </div>
 <div id="email-error" class="text-error text-sm mb-4 hidden"></div>
-<div class="space-y-2 mb-5 text-left">
-<label class="flex items-start gap-2 text-sm text-on-surface-variant cursor-pointer">
-<input type="checkbox" id="consent-privacy" class="mt-0.5 w-4 h-4 accent-primary cursor-pointer flex-shrink-0">
-<span>Я ознакомлен(а) с <button type="button" class="text-primary hover:underline" data-open-modal="privacy-modal">Политикой конфиденциальности</button></span>
+<div class="space-y-3 mb-5 text-left">
+<label class="flex items-start gap-3 text-sm text-on-surface-variant cursor-pointer leading-relaxed">
+<input type="checkbox" id="consent-privacy" class="mt-0.5 w-5 h-5 rounded text-primary accent-primary cursor-pointer flex-shrink-0">
+<span>Я ознакомлен(а) с <a href="#" class="text-primary hover:underline underline-offset-2" data-open-modal="privacy-modal">Политикой конфиденциальности</a></span>
 </label>
-<label class="flex items-start gap-2 text-sm text-on-surface-variant cursor-pointer">
-<input type="checkbox" id="consent-pd" class="mt-0.5 w-4 h-4 accent-primary cursor-pointer flex-shrink-0">
-<span>Даю <button type="button" class="text-primary hover:underline" data-open-modal="consent-modal">согласие на обработку персональных данных</button></span>
+<label class="flex items-start gap-3 text-sm text-on-surface-variant cursor-pointer leading-relaxed">
+<input type="checkbox" id="consent-pd" class="mt-0.5 w-5 h-5 rounded text-primary accent-primary cursor-pointer flex-shrink-0">
+<span>Даю <a href="#" class="text-primary hover:underline underline-offset-2" data-open-modal="consent-modal">согласие на обработку персональных данных</a></span>
 </label>
 </div>
 <button id="send-code-btn" disabled class="primary-gradient text-on-primary py-4 rounded-full font-bold text-lg w-full active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100">Отправить код</button>
@@ -548,6 +548,7 @@ function closeModal(id) {
 document.querySelectorAll('[data-open-modal]').forEach(el => {
     el.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         openModal(el.dataset.openModal);
     });
 });
