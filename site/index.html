@@ -3,110 +3,184 @@
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>BYPASS - Secure your digital footprint</title>
+<title>WIREX — Encrypted access</title>
+<link rel="icon" type="image/svg+xml" href="/static/logo.svg">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 <script id="tailwind-config">
+      // WIREX design system — see .stitch/DESIGN.md
       tailwind.config = {
         darkMode: "class",
         theme: {
           extend: {
             "colors": {
-                    "primary-container": "#00eefc",
-                    "on-secondary": "#4f5066",
-                    "error-container": "#9f0519",
-                    "on-tertiary-container": "#f8f1ff",
-                    "on-primary-fixed-variant": "#005e64",
-                    "surface-tint": "#8ff5ff",
-                    "on-secondary-container": "#cfcee8",
-                    "surface-variant": "#22262f",
-                    "secondary-fixed": "#e1e0fb",
+                    // Primary surfaces (dark to darker by elevation)
+                    "background":             "#000000",
+                    "surface":                "#000000",
                     "surface-container-lowest": "#000000",
-                    "on-surface-variant": "#a9abb3",
-                    "inverse-on-surface": "#52555c",
-                    "tertiary-fixed-dim": "#b190ff",
-                    "primary-fixed": "#00eefc",
-                    "tertiary-dim": "#874cff",
-                    "surface": "#0b0e14",
-                    "secondary-dim": "#d3d2ec",
-                    "on-primary-container": "#005359",
-                    "on-primary": "#005d63",
-                    "secondary": "#e1e0fb",
-                    "error": "#ff716c",
-                    "primary-fixed-dim": "#00deec",
-                    "secondary-container": "#44455a",
-                    "on-tertiary": "#290067",
-                    "on-secondary-fixed": "#3d3e52",
-                    "tertiary-fixed": "#bda1ff",
-                    "on-background": "#ecedf6",
-                    "background": "#0b0e14",
-                    "primary": "#8ff5ff",
-                    "surface-container": "#161a21",
-                    "secondary-fixed-dim": "#d3d2ec",
-                    "primary-dim": "#00deec",
-                    "on-error-container": "#ffa8a3",
-                    "outline": "#73757d",
-                    "tertiary-container": "#7000ff",
-                    "on-tertiary-fixed": "#1f0052",
-                    "on-surface": "#ecedf6",
-                    "on-error": "#490006",
-                    "on-tertiary-fixed-variant": "#4700a7",
-                    "on-secondary-fixed-variant": "#595a70",
-                    "inverse-surface": "#f9f9ff",
-                    "surface-container-highest": "#22262f",
-                    "on-primary-fixed": "#003f43",
-                    "surface-dim": "#0b0e14",
-                    "inverse-primary": "#006a71",
-                    "outline-variant": "#45484f",
-                    "surface-container-high": "#1c2028",
-                    "error-dim": "#d7383b",
-                    "tertiary": "#ac89ff",
-                    "surface-bright": "#282c36",
-                    "surface-container-low": "#10131a"
+                    "surface-container-low":  "#070707",
+                    "surface-container":      "#0A0A0A",
+                    "surface-container-high": "#111111",
+                    "surface-container-highest": "#161616",
+                    "surface-bright":         "#1C1C1C",
+                    "surface-dim":            "#000000",
+                    "surface-variant":        "#0A0A0A",
+
+                    // Borders
+                    "outline":                "#2A2A2A",
+                    "outline-variant":        "#1A1A1A",
+
+                    // Text
+                    "on-background":          "#F0F0F0",
+                    "on-surface":             "#F0F0F0",
+                    "on-surface-variant":     "#8A8A8A",
+                    "inverse-on-surface":     "#4A4A4A",
+                    "inverse-surface":        "#F0F0F0",
+
+                    // Accent (primary action)
+                    "primary":                "#00EEFC",
+                    "primary-dim":            "#00B8C4",
+                    "primary-fixed":          "#00EEFC",
+                    "primary-fixed-dim":      "#00B8C4",
+                    "primary-container":      "#00EEFC",
+                    "on-primary":             "#000000",
+                    "on-primary-container":   "#000000",
+                    "on-primary-fixed":       "#000000",
+                    "on-primary-fixed-variant": "#003B40",
+                    "surface-tint":           "#00EEFC",
+                    "inverse-primary":        "#00B8C4",
+
+                    // Status
+                    "success":                "#00E78B",
+                    "warning":                "#FFB020",
+                    "error":                  "#FF4757",
+                    "error-dim":              "#CC2D3C",
+                    "on-error":               "#FFFFFF",
+                    "on-error-container":     "#FFB7BD",
+                    "error-container":        "#3A0008",
+
+                    // Legacy hooks kept for compatibility (mapped to neutral surfaces)
+                    "on-secondary":           "#8A8A8A",
+                    "on-tertiary-container":  "#F0F0F0",
+                    "on-secondary-container": "#F0F0F0",
+                    "secondary-fixed":        "#1A1A1A",
+                    "tertiary-fixed-dim":     "#00EEFC",
+                    "tertiary-dim":           "#00B8C4",
+                    "secondary-dim":          "#1A1A1A",
+                    "secondary":              "#1A1A1A",
+                    "secondary-container":    "#1A1A1A",
+                    "on-tertiary":            "#000000",
+                    "on-secondary-fixed":     "#8A8A8A",
+                    "tertiary-fixed":         "#00EEFC",
+                    "secondary-fixed-dim":    "#1A1A1A",
+                    "tertiary-container":     "#00EEFC",
+                    "on-tertiary-fixed":      "#000000",
+                    "on-tertiary-fixed-variant": "#003B40",
+                    "on-secondary-fixed-variant": "#8A8A8A",
+                    "tertiary":               "#00EEFC"
             },
             "borderRadius": {
                     "DEFAULT": "0.25rem",
                     "lg": "0.5rem",
                     "xl": "0.75rem",
+                    "2xl": "1rem",
                     "full": "9999px"
             },
             "fontFamily": {
-                    "headline": ["Space Grotesk"],
-                    "body": ["Inter"],
-                    "label": ["Inter"]
+                    "headline": ["Space Grotesk", "system-ui", "sans-serif"],
+                    "body":     ["Inter", "system-ui", "sans-serif"],
+                    "label":    ["Inter", "system-ui", "sans-serif"],
+                    "mono":     ["JetBrains Mono", "ui-monospace", "monospace"]
             }
           },
         },
       }
     </script>
 <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #ecedf6; }
-        .font-headline { font-family: 'Space Grotesk', sans-serif; }
-        .primary-gradient { background: linear-gradient(135deg, #8ff5ff 0%, #00eefc 100%); }
+        :root {
+            --wx-bg: #000000;
+            --wx-surface: #0A0A0A;
+            --wx-surface-2: #111111;
+            --wx-border: #2A2A2A;
+            --wx-border-soft: #1A1A1A;
+            --wx-text: #F0F0F0;
+            --wx-text-2: #8A8A8A;
+            --wx-cyan: #00EEFC;
+            --wx-cyan-dim: #00B8C4;
+            --wx-cyan-glow: rgba(0,238,252,.18);
+            --wx-cyan-wash: rgba(0,238,252,.06);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--wx-bg);
+            color: var(--wx-text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-image:
+                linear-gradient(rgba(0,238,252,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,238,252,.025) 1px, transparent 1px);
+            background-size: 48px 48px;
+            background-position: center top;
+            background-attachment: fixed;
+        }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+        .font-mono     { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+        .primary-gradient {
+            background: var(--wx-cyan);
+            color: #000;
+        }
+        .primary-gradient:hover {
+            background: var(--wx-cyan-dim);
+            box-shadow: 0 0 24px var(--wx-cyan-glow);
+        }
+        .wx-glow         { box-shadow: 0 0 32px var(--wx-cyan-glow); }
+        .wx-glow-sm      { box-shadow: 0 0 16px rgba(0,238,252,.12); }
+        .wx-card {
+            background: var(--wx-surface);
+            border: 1px solid var(--wx-border-soft);
+        }
+        .wx-card-elevated {
+            background: var(--wx-surface-2);
+            border: 1px solid var(--wx-border);
+        }
+        .wx-input {
+            background: var(--wx-surface);
+            border: 1px solid var(--wx-border);
+            color: var(--wx-text);
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .wx-input:focus {
+            outline: none;
+            border-color: var(--wx-cyan);
+            box-shadow: 0 0 0 3px rgba(0,238,252,.12);
+        }
+        .wx-input::placeholder { color: #4A4A4A; }
+        .wx-divider { height: 1px; background: var(--wx-border-soft); }
+        .wx-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .wx-chip-cyan    { background: var(--wx-cyan-wash); color: var(--wx-cyan); border: 1px solid rgba(0,238,252,.3); }
+        .wx-chip-success { background: rgba(0,231,139,.08); color: #00E78B; border: 1px solid rgba(0,231,139,.3); }
+        .wx-chip-muted   { background: transparent; color: var(--wx-text-2); border: 1px solid var(--wx-border); }
         .hidden { display: none; }
-        .server-btn.selected { border: 2px solid #00eefc; background: rgba(0,238,252,0.1); }
+        .server-btn.selected {
+            border-color: var(--wx-cyan);
+            background: var(--wx-cyan-wash);
+            box-shadow: 0 0 16px rgba(0,238,252,.12);
+        }
         .result { animation: fadeIn 0.5s ease; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .copy-btn.copied { background: #00eefc; color: #005d63; }
-        .otp-input {
-            width: 50px;
-            height: 60px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            background: #22262f;
-            border: 2px solid #45484f;
-            border-radius: 12px;
-            color: #00eefc;
-        }
-        .otp-input:focus {
-            outline: none;
-            border-color: #00eefc;
-        }
+        .copy-btn.copied { background: var(--wx-cyan); color: #000; box-shadow: 0 0 16px var(--wx-cyan-glow); }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -118,72 +192,88 @@
         details > summary::-webkit-details-marker { display: none; }
         details > summary .chevron { transition: transform 0.2s ease; }
         details[open] > summary .chevron { transform: rotate(180deg); }
+        .otp-input {
+            width: 44px; height: 56px;
+            background: var(--wx-surface);
+            border: 1px solid var(--wx-border);
+            border-radius: 8px;
+            color: var(--wx-text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px; font-weight: 600;
+            text-align: center;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .otp-input:focus {
+            outline: none;
+            border-color: var(--wx-cyan);
+            box-shadow: 0 0 0 3px rgba(0,238,252,.12);
+        }
+        .digit-input {} /* legacy hook kept for JS selectors */
+        .wx-bottom-fade { background: linear-gradient(180deg, transparent, #000 60%); }
+        ::selection { background: var(--wx-cyan); color: #000; }
     </style>
 </head>
-<body class="bg-surface text-on-surface">
+<body class="bg-background text-on-surface">
 
 <!-- TopAppBar -->
-<nav class="fixed top-0 w-full z-50 bg-[#0b0e14]/70 backdrop-blur-xl">
-<div class="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-[#00F0FF] text-2xl">shield_lock</span>
-<span class="text-2xl font-bold tracking-tighter text-[#ecedf6] italic font-['Space_Grotesk']">bypass</span>
+<nav class="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-outline-variant">
+<div class="flex items-center justify-between px-5 py-3 max-w-7xl mx-auto">
+<div class="flex items-center gap-2.5">
+<img src="/static/logo.svg" alt="WIREX" class="h-8 w-8 rounded-md">
+<span class="font-headline text-lg font-bold tracking-wide text-on-surface">WIREX</span>
 </div>
-<div id="user-email-display" class="text-primary text-sm hidden"></div>
-<button id="logout-btn" class="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-full text-sm hidden">Выйти</button>
+<div class="flex items-center gap-3">
+<div id="user-email-display" class="text-primary text-xs font-mono hidden truncate max-w-[140px]"></div>
+<button id="logout-btn" class="border border-outline text-on-surface-variant hover:text-primary hover:border-primary px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hidden">Выйти</button>
+</div>
 </div>
 </nav>
 
 <main class="pt-24 pb-12">
 
 <!-- Step 1: Email Input -->
-<section id="email-section" class="relative px-6 py-12 overflow-hidden">
-<div class="absolute top-[-10%] left-[-20%] w-[80%] h-[80%] bg-primary/5 rounded-full blur-[120px]"></div>
-<div class="absolute bottom-0 right-[-10%] w-[60%] h-[60%] bg-tertiary/5 rounded-full blur-[100px]"></div>
-<div class="relative z-10 flex flex-col items-center text-center max-w-md mx-auto">
-<div class="mb-8 p-6 rounded-full bg-surface-container-high relative group">
-<div class="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse"></div>
-<span class="material-symbols-outlined text-primary text-7xl relative">alternate_email</span>
-</div>
-<h1 class="font-headline text-4xl md:text-5xl font-bold tracking-tight mb-6">
-Добро пожаловать в <span class="text-transparent bg-clip-text primary-gradient">BYPASS</span>
+<section id="email-section" class="relative px-5 py-10 overflow-hidden">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[90%] h-[60%] bg-primary/[0.06] rounded-full blur-[120px] pointer-events-none"></div>
+<div class="relative z-10 flex flex-col items-center text-center max-w-[440px] mx-auto">
+<img src="/static/logo.svg" alt="WIREX" class="w-20 h-20 rounded-2xl mb-6 wx-glow-sm">
+<h1 class="font-headline text-3xl font-bold tracking-tight mb-2">
+Подключение к <span class="text-primary">WIREX</span>
 </h1>
-<p class="text-on-surface-variant mb-8">Введите ваш email для получения доступа</p>
+<p class="text-on-surface-variant text-sm mb-8 max-w-[320px]">Зашифрованный доступ к зарубежным сервисам. Войдите по email — пришлём одноразовый код.</p>
 
-<div class="w-full bg-surface-container p-8 rounded-xl">
-<div class="mb-6">
-<input type="email" id="login-email" placeholder="example@mail.com" class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary">
-</div>
-<div id="email-error" class="text-error text-sm mb-4 hidden"></div>
-<div class="space-y-3 mb-5 text-left">
-<label class="flex items-start gap-3 text-sm text-on-surface-variant cursor-pointer leading-relaxed">
-<input type="checkbox" id="consent-privacy" class="mt-0.5 w-5 h-5 rounded text-primary accent-primary cursor-pointer flex-shrink-0">
+<div class="w-full wx-card rounded-2xl p-6">
+<label class="block text-[11px] text-on-surface-variant font-semibold uppercase tracking-[0.12em] mb-2 text-left">Email</label>
+<input type="email" id="login-email" placeholder="example@mail.com" class="wx-input w-full rounded-lg px-4 py-3.5 text-base font-mono mb-4">
+<div id="email-error" class="text-error text-xs mb-3 hidden text-left"></div>
+<div class="space-y-2.5 mb-5 text-left">
+<label class="flex items-start gap-2.5 text-[13px] text-on-surface-variant cursor-pointer leading-snug">
+<input type="checkbox" id="consent-privacy" class="mt-0.5 w-[18px] h-[18px] rounded text-primary accent-primary cursor-pointer flex-shrink-0">
 <span>Я ознакомлен(а) с <a href="#" class="text-primary hover:underline underline-offset-2" data-open-modal="privacy-modal">Политикой конфиденциальности</a></span>
 </label>
-<label class="flex items-start gap-3 text-sm text-on-surface-variant cursor-pointer leading-relaxed">
-<input type="checkbox" id="consent-pd" class="mt-0.5 w-5 h-5 rounded text-primary accent-primary cursor-pointer flex-shrink-0">
+<label class="flex items-start gap-2.5 text-[13px] text-on-surface-variant cursor-pointer leading-snug">
+<input type="checkbox" id="consent-pd" class="mt-0.5 w-[18px] h-[18px] rounded text-primary accent-primary cursor-pointer flex-shrink-0">
 <span>Даю <a href="#" class="text-primary hover:underline underline-offset-2" data-open-modal="consent-modal">согласие на обработку персональных данных</a></span>
 </label>
 </div>
-<button id="send-code-btn" disabled class="primary-gradient text-on-primary py-4 rounded-full font-bold text-lg w-full active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100">Отправить код</button>
+<button id="send-code-btn" disabled class="primary-gradient py-3.5 rounded-lg font-bold text-base w-full active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:shadow-none uppercase tracking-wider">Отправить код</button>
+</div>
+
+<div class="mt-6 flex items-center gap-2 text-[11px] text-on-surface-variant uppercase tracking-[0.12em]">
+<span class="material-symbols-outlined text-[14px]">lock</span> 152-ФЗ · No logs
 </div>
 </div>
 </section>
 
 <!-- Step 2: OTP Verification -->
-<section id="otp-section" class="relative px-6 py-12 overflow-hidden hidden">
-<div class="absolute top-[-10%] left-[-20%] w-[80%] h-[80%] bg-primary/5 rounded-full blur-[120px]"></div>
-<div class="absolute bottom-0 right-[-10%] w-[60%] h-[60%] bg-tertiary/5 rounded-full blur-[100px]"></div>
-<div class="relative z-10 flex flex-col items-center text-center max-w-md mx-auto">
-<div class="mb-8 p-6 rounded-full bg-surface-container-high relative group">
-<div class="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse"></div>
-<span class="material-symbols-outlined text-primary text-7xl relative">pin</span>
-</div>
-<h2 class="font-headline text-3xl font-bold mb-4">Подтверждение</h2>
-<p class="text-on-surface-variant mb-8">Введите код из письма, отправленного на <span id="otp-email" class="text-primary"></span></p>
+<section id="otp-section" class="relative px-5 py-10 overflow-hidden hidden">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[90%] h-[60%] bg-primary/[0.06] rounded-full blur-[120px] pointer-events-none"></div>
+<div class="relative z-10 flex flex-col items-center text-center max-w-[440px] mx-auto">
+<img src="/static/logo.svg" alt="WIREX" class="w-14 h-14 rounded-xl mb-5">
+<h2 class="font-headline text-2xl font-bold mb-2">Подтверждение</h2>
+<p class="text-on-surface-variant text-sm mb-7">Код отправлен на <span id="otp-email" class="text-primary font-mono"></span></p>
 
-<div class="w-full bg-surface-container p-8 rounded-xl">
-<div class="flex justify-center gap-3 mb-4">
+<div class="w-full wx-card rounded-2xl p-6">
+<div class="flex justify-center gap-2 mb-4">
 <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" class="otp-input digit-input" data-index="0" autofocus>
 <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" class="otp-input digit-input" data-index="1">
 <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" class="otp-input digit-input" data-index="2">
@@ -191,147 +281,157 @@
 <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" class="otp-input digit-input" data-index="4">
 <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" class="otp-input digit-input" data-index="5">
 </div>
-<button id="paste-code-btn" type="button" class="text-primary text-sm hover:underline mb-4 inline-flex items-center gap-1">
-<span class="material-symbols-outlined text-base">content_paste</span> Вставить код
+<button id="paste-code-btn" type="button" class="text-primary text-xs hover:underline mb-4 inline-flex items-center gap-1.5 uppercase tracking-wider font-semibold">
+<span class="material-symbols-outlined text-[14px]">content_paste</span> Вставить код
 </button>
-<div id="otp-error" class="text-error text-sm mb-4 hidden"></div>
-<button id="verify-code-btn" class="primary-gradient text-on-primary py-4 rounded-full font-bold text-lg w-full active:scale-95 transition-all">Подтвердить</button>
-<div class="flex items-center justify-between mt-4 text-sm">
-<button id="change-email-btn" class="text-on-surface-variant hover:text-primary">← Изменить email</button>
-<button id="resend-code-btn" class="text-primary hover:underline">Отправить код повторно</button>
+<div id="otp-error" class="text-error text-xs mb-3 hidden"></div>
+<button id="verify-code-btn" class="primary-gradient py-3.5 rounded-lg font-bold text-base w-full active:scale-[0.98] transition-all uppercase tracking-wider">Подтвердить</button>
+<div class="flex items-center justify-between mt-4 text-xs">
+<button id="change-email-btn" class="text-on-surface-variant hover:text-primary transition-colors">← Изменить email</button>
+<button id="resend-code-btn" class="text-primary hover:underline">Отправить повторно</button>
 </div>
 </div>
 </div>
 </section>
 
 <!-- My Keys -->
-<section id="my-keys-section" class="px-6 py-12 hidden">
-<div class="max-w-5xl mx-auto">
-<div class="flex items-center justify-between mb-8 gap-4">
-<h2 class="font-headline text-3xl font-bold pl-2 border-l-4 border-primary">Мои ключи</h2>
-<button id="new-key-btn" class="primary-gradient text-on-primary px-5 py-2 rounded-full font-bold text-sm active:scale-95 transition-all whitespace-nowrap">+ Новый ключ</button>
+<section id="my-keys-section" class="px-5 py-8 hidden">
+<div class="max-w-3xl mx-auto">
+<div class="flex items-center justify-between mb-6 gap-3">
+<div>
+<div class="text-[11px] text-on-surface-variant uppercase tracking-[0.12em] mb-1">Активные подключения</div>
+<h2 class="font-headline text-2xl font-bold">Мои ключи</h2>
+</div>
+<button id="new-key-btn" class="primary-gradient px-4 py-2.5 rounded-lg font-bold text-xs active:scale-[0.98] transition-all whitespace-nowrap uppercase tracking-wider inline-flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">add</span> Новый ключ
+</button>
 </div>
 
-<div id="sub-banner" class="hidden bg-surface-container rounded-xl p-5 mb-6"></div>
+<div id="sub-banner" class="hidden wx-card rounded-xl p-4 mb-5"></div>
 
-<div id="my-keys-loading" class="text-center py-16 text-on-surface-variant">Загрузка...</div>
+<div id="my-keys-loading" class="text-center py-16 text-on-surface-variant text-sm font-mono uppercase tracking-wider">Загрузка...</div>
 
 <div id="my-keys-empty" class="hidden text-center py-16">
-<div class="inline-block p-6 rounded-full bg-surface-container-high mb-4">
-<span class="material-symbols-outlined text-on-surface-variant text-6xl">key_off</span>
+<div class="inline-block p-5 rounded-2xl wx-card mb-5">
+<span class="material-symbols-outlined text-on-surface-variant text-5xl">key_off</span>
 </div>
-<h3 class="font-headline text-xl font-bold mb-2">У вас пока нет ключей</h3>
-<p class="text-on-surface-variant mb-6">Создайте первый ключ, чтобы подключиться к VPN</p>
-<button id="create-first-btn" class="primary-gradient text-on-primary px-8 py-3 rounded-full font-bold active:scale-95 transition-all">Создать ключ</button>
+<h3 class="font-headline text-xl font-bold mb-2">Ещё нет ключей</h3>
+<p class="text-on-surface-variant text-sm mb-6">Создайте первый ключ, чтобы подключиться к VPN</p>
+<button id="create-first-btn" class="primary-gradient px-6 py-3 rounded-lg font-bold text-sm active:scale-[0.98] transition-all uppercase tracking-wider">Создать ключ</button>
 </div>
 
-<div id="my-keys-list" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+<div id="my-keys-list" class="hidden grid grid-cols-1 gap-3"></div>
 </div>
 </section>
 
 <!-- Step 3: Server Selection -->
-<section id="server-section" class="px-6 py-12 hidden">
-<div class="max-w-5xl mx-auto">
-<button id="server-back-btn" class="mb-6 bg-surface-container-high text-on-surface-variant hover:text-primary px-4 py-2 rounded-full text-sm inline-flex items-center gap-1 active:scale-95 transition-all">
-<span class="material-symbols-outlined text-base">arrow_back</span> К моим ключам
+<section id="server-section" class="px-5 py-8 hidden">
+<div class="max-w-3xl mx-auto">
+<button id="server-back-btn" class="mb-6 border border-outline text-on-surface-variant hover:text-primary hover:border-primary px-3 py-1.5 rounded-lg text-xs inline-flex items-center gap-1.5 active:scale-[0.98] transition-colors uppercase tracking-wider font-medium">
+<span class="material-symbols-outlined text-[14px]">arrow_back</span> К моим ключам
 </button>
-<h2 id="server-section-title" class="font-headline text-3xl font-bold mb-8 pl-2 border-l-4 border-primary">Выберите сервер</h2>
-<div id="server-list" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+<div class="text-[11px] text-on-surface-variant uppercase tracking-[0.12em] mb-1">Шаг 1 из 1</div>
+<h2 id="server-section-title" class="font-headline text-2xl font-bold mb-6">Выберите сервер</h2>
+<div id="server-list" class="grid grid-cols-2 gap-3 mb-6"></div>
 
-<div class="bg-surface-container p-8 rounded-xl">
-<div class="input-group mb-6">
-<label class="text-on-surface-variant text-sm font-semibold mb-2 block">Имя пользователя (опционально)</label>
-<input type="text" id="username" placeholder="Введите ваше имя" class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary">
-<div class="text-xs text-on-surface-variant mt-2">2–32 символа, только латиница, цифры, <code>_</code> или <code>-</code>. Оставьте пустым — сгенерируем из email.</div>
-</div>
-<div id="create-error" class="text-error text-sm mb-4 hidden"></div>
-<button id="create-key-btn" class="primary-gradient text-on-primary py-4 rounded-full font-bold text-lg w-full active:scale-95 transition-all">Сгенерировать ключ</button>
+<div class="wx-card rounded-2xl p-6">
+<label class="block text-[11px] text-on-surface-variant font-semibold uppercase tracking-[0.12em] mb-2">Имя пользователя <span class="text-on-surface-variant/70 normal-case tracking-normal">(необязательно)</span></label>
+<input type="text" id="username" placeholder="username" class="wx-input w-full rounded-lg px-4 py-3.5 text-base font-mono mb-2">
+<div class="text-[11px] text-on-surface-variant mb-5 leading-relaxed">2–32 символа · латиница, цифры, <code class="font-mono">_</code> или <code class="font-mono">-</code>. Оставьте пустым — сгенерируем из email.</div>
+<div id="create-error" class="text-error text-xs mb-3 hidden"></div>
+<button id="create-key-btn" class="primary-gradient py-3.5 rounded-lg font-bold text-base w-full active:scale-[0.98] transition-all uppercase tracking-wider inline-flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">flash_on</span> Сгенерировать ключ
+</button>
 </div>
 </div>
 </section>
 
 <!-- Result Section -->
-<section id="result-section" class="px-6 py-12 hidden">
-<div class="bg-surface-container p-8 rounded-xl result">
-<div class="text-center mb-6">
-<div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-<span class="material-symbols-outlined text-primary text-3xl">check_circle</span>
+<section id="result-section" class="px-5 py-8 hidden">
+<div class="max-w-[440px] mx-auto result">
+<div class="text-center mb-5">
+<div class="inline-flex items-center gap-1.5 wx-chip wx-chip-success mb-3">
+<span class="material-symbols-outlined text-[12px]">check_circle</span> Ключ создан
 </div>
-<h2 class="font-headline text-2xl font-bold">Ключ готов!</h2>
-<p id="result-info" class="text-on-surface-variant mt-2"></p>
+<h2 class="font-headline text-2xl font-bold">Готово</h2>
+<p id="result-info" class="text-on-surface-variant text-sm font-mono mt-1"></p>
 </div>
 
 <div id="proto-tabs" class="flex gap-2 mb-4 justify-center flex-wrap">
-<button data-proto="vless" class="proto-tab primary-gradient text-on-primary px-4 py-1.5 rounded-full text-xs font-semibold">VLESS</button>
-<button data-proto="hysteria" id="hy2-tab-btn" class="proto-tab bg-surface-container text-on-surface-variant px-4 py-1.5 rounded-full text-xs font-semibold hidden">Hysteria 2</button>
+<button data-proto="vless" class="proto-tab primary-gradient px-4 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wider">VLESS</button>
+<button data-proto="hysteria" id="hy2-tab-btn" class="proto-tab border border-outline text-on-surface-variant hover:text-primary hover:border-primary px-4 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wider hidden">Hysteria 2</button>
 </div>
 
 <div id="proto-vless" class="proto-content" data-proto="vless">
-<div class="qr-container text-center mb-2">
-<img id="qr-img" src="" alt="QR Code" class="inline-block bg-white p-2 rounded-xl w-40 h-40">
+<div class="qr-container text-center mb-3">
+<div class="inline-block p-3 rounded-2xl bg-surface-container border border-primary/40 wx-glow-sm">
+<img id="qr-img" src="" alt="QR Code" class="block bg-white p-2 rounded-lg w-44 h-44">
+</div>
 </div>
 </div>
 
 <div id="proto-hysteria" class="proto-content hidden" data-proto="hysteria">
-<div class="qr-container text-center mb-2">
-<img id="hy2-qr-img" src="" alt="QR Code" class="inline-block bg-white p-2 rounded-xl w-40 h-40">
+<div class="qr-container text-center mb-3">
+<div class="inline-block p-3 rounded-2xl bg-surface-container border border-primary/40 wx-glow-sm">
+<img id="hy2-qr-img" src="" alt="QR Code" class="block bg-white p-2 rounded-lg w-44 h-44">
+</div>
 </div>
 </div>
 
-<button id="auto-import-btn" class="mt-2 mb-5 primary-gradient text-on-primary py-4 rounded-full font-bold text-lg w-full active:scale-95 transition-all flex items-center justify-center gap-2">
+<button id="auto-import-btn" class="mt-1 mb-5 primary-gradient py-4 rounded-lg font-bold text-base w-full active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider">
 <span class="material-symbols-outlined">rocket_launch</span> Начать использовать
 </button>
 
 <div class="proto-content" data-proto="vless">
-<details class="bg-surface-container-high rounded-xl mb-3 overflow-hidden">
+<details class="wx-card rounded-xl mb-2.5 overflow-hidden">
 <summary class="flex items-center justify-between p-4 cursor-pointer select-none">
-<span class="text-primary text-xs font-bold uppercase tracking-wider">VLESS ключ</span>
+<span class="text-primary text-[11px] font-bold uppercase tracking-[0.12em]">VLESS ключ</span>
 <span class="material-symbols-outlined text-on-surface-variant chevron">expand_more</span>
 </summary>
 <div class="px-4 pb-4">
 <div id="vless-url" class="text-sm text-on-surface-variant break-all font-mono"></div>
-<button class="copy-btn mt-3 bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-semibold w-full" onclick="copyText('vless-url', this)">Скопировать</button>
+<button class="copy-btn mt-3 border border-primary/40 hover:border-primary text-primary px-4 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider w-full transition-colors inline-flex items-center justify-center gap-1.5" onclick="copyText('vless-url', this)">Скопировать</button>
 </div>
 </details>
 </div>
 
 <div class="proto-content hidden" data-proto="hysteria">
-<details class="bg-surface-container-high rounded-xl mb-3 overflow-hidden">
+<details class="wx-card rounded-xl mb-2.5 overflow-hidden">
 <summary class="flex items-center justify-between p-4 cursor-pointer select-none">
-<span class="text-primary text-xs font-bold uppercase tracking-wider">Hysteria 2 ключ</span>
+<span class="text-primary text-[11px] font-bold uppercase tracking-[0.12em]">Hysteria 2 ключ</span>
 <span class="material-symbols-outlined text-on-surface-variant chevron">expand_more</span>
 </summary>
 <div class="px-4 pb-4">
 <div id="hy2-url" class="text-sm text-on-surface-variant break-all font-mono"></div>
-<button class="copy-btn mt-3 bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-semibold w-full" onclick="copyText('hy2-url', this)">Скопировать</button>
+<button class="copy-btn mt-3 border border-primary/40 hover:border-primary text-primary px-4 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider w-full transition-colors inline-flex items-center justify-center gap-1.5" onclick="copyText('hy2-url', this)">Скопировать</button>
 <div class="text-xs text-on-surface-variant mt-3">Hysteria 2 — запасной протокол по UDP. Используй, если VLESS не подключается или режет скорость. Клиенты: Hiddify, V2Box (iOS≥1.4), NekoBox, Streisand.</div>
 </div>
 </details>
 </div>
 
-<details class="bg-surface-container-high rounded-xl mb-3 overflow-hidden">
+<details class="wx-card rounded-xl mb-2.5 overflow-hidden">
 <summary class="flex items-center justify-between p-4 cursor-pointer select-none">
-<span class="text-primary text-xs font-bold uppercase tracking-wider">Ссылка подписки</span>
+<span class="text-primary text-[11px] font-bold uppercase tracking-[0.12em]">Ссылка подписки</span>
 <span class="material-symbols-outlined text-on-surface-variant chevron">expand_more</span>
 </summary>
 <div class="px-4 pb-4">
 <div id="sub-url" class="text-sm text-on-surface-variant break-all font-mono"></div>
-<button class="copy-btn mt-3 bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-semibold w-full" onclick="copyText('sub-url', this)">Скопировать</button>
+<button class="copy-btn mt-3 border border-primary/40 hover:border-primary text-primary px-4 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider w-full transition-colors inline-flex items-center justify-center gap-1.5" onclick="copyText('sub-url', this)">Скопировать</button>
 <div class="text-xs text-on-surface-variant mt-2">В подписку зашиты оба протокола — клиент выберет рабочий автоматически.</div>
 </div>
 </details>
 
-<details class="bg-surface-container-high rounded-xl mb-3 overflow-hidden">
+<details class="wx-card rounded-xl mb-2.5 overflow-hidden">
 <summary class="flex items-center justify-between p-4 cursor-pointer select-none">
-<span class="font-headline font-bold text-on-surface">Как подключиться</span>
+<span class="text-primary text-[11px] font-bold uppercase tracking-[0.12em]">Как подключиться</span>
 <span class="material-symbols-outlined text-on-surface-variant chevron">expand_more</span>
 </summary>
 <div class="px-4 pb-4">
-<div class="flex flex-wrap gap-2 mb-4" id="platform-tabs">
-<button data-platform="ios" class="platform-tab primary-gradient text-on-primary px-3 py-1.5 rounded-full text-xs font-semibold">iOS</button>
-<button data-platform="android" class="platform-tab bg-surface-container text-on-surface-variant px-3 py-1.5 rounded-full text-xs font-semibold">Android</button>
-<button data-platform="windows" class="platform-tab bg-surface-container text-on-surface-variant px-3 py-1.5 rounded-full text-xs font-semibold">Windows</button>
-<button data-platform="macos" class="platform-tab bg-surface-container text-on-surface-variant px-3 py-1.5 rounded-full text-xs font-semibold">macOS</button>
+<div class="flex flex-wrap gap-1.5 mb-4" id="platform-tabs">
+<button data-platform="ios" class="platform-tab primary-gradient px-3 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider">iOS</button>
+<button data-platform="android" class="platform-tab border border-outline text-on-surface-variant hover:text-primary hover:border-primary px-3 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors">Android</button>
+<button data-platform="windows" class="platform-tab border border-outline text-on-surface-variant hover:text-primary hover:border-primary px-3 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors">Windows</button>
+<button data-platform="macos" class="platform-tab border border-outline text-on-surface-variant hover:text-primary hover:border-primary px-3 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors">macOS</button>
 </div>
 
 <div id="platform-ios" class="platform-content">
@@ -376,58 +476,59 @@
 </div>
 </details>
 
-<button id="reset-btn" class="mt-3 bg-surface-container-high border border-outline-variant/30 text-on-surface py-3 rounded-full font-medium w-full active:scale-95 transition-all">К моим ключам</button>
+<button id="reset-btn" class="mt-3 border border-outline hover:border-primary hover:text-primary text-on-surface-variant py-3 rounded-lg font-medium w-full active:scale-[0.98] transition-colors text-sm uppercase tracking-wider">К моим ключам</button>
 </div>
 </section>
 
 <!-- Feature Section -->
-<section id="marketing-section" class="px-6 py-12">
-<h2 class="font-headline text-3xl font-bold mb-8 pl-2 border-l-4 border-primary">Современные протоколы</h2>
-<div class="grid grid-cols-1 gap-6">
-<div class="bg-surface-container p-8 rounded-xl relative overflow-hidden group">
-<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-<span class="material-symbols-outlined text-9xl">speed</span>
+<section id="marketing-section" class="px-5 py-10 max-w-3xl mx-auto">
+<div class="text-[11px] text-on-surface-variant uppercase tracking-[0.12em] mb-2">Архитектура</div>
+<h2 class="font-headline text-2xl font-bold mb-6">Современные протоколы</h2>
+<div class="grid grid-cols-1 gap-3">
+<div class="wx-card rounded-xl p-5 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-[0.04] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
+<span class="material-symbols-outlined text-[120px]">speed</span>
 </div>
 <div class="relative z-10">
-<div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
-<span class="material-symbols-outlined text-primary">bolt</span>
+<div class="w-10 h-10 bg-primary/10 border border-primary/30 rounded-lg flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary text-[20px]">bolt</span>
 </div>
-<h3 class="font-headline text-2xl font-bold mb-3">Speed</h3>
-<p class="text-on-surface-variant leading-relaxed">Разработан для больших нагрузок. Никаких задержек. Уникальные протоколы заботятся о вашей скорости.</p>
+<h3 class="font-headline text-lg font-bold mb-1.5">Скорость</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">VLESS+Reality по TCP и Hysteria 2 по UDP. Клиент сам выбирает рабочий — никаких ручных переключений.</p>
 </div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<div class="bg-surface-container-high p-8 rounded-xl border border-outline-variant/10">
-<div class="w-12 h-12 bg-tertiary/10 rounded-lg flex items-center justify-center mb-6">
-<span class="material-symbols-outlined text-tertiary">visibility_off</span>
+<div class="grid grid-cols-2 gap-3">
+<div class="wx-card rounded-xl p-5">
+<div class="w-10 h-10 bg-primary/10 border border-primary/30 rounded-lg flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary text-[20px]">visibility_off</span>
 </div>
-<h3 class="font-headline text-xl font-bold mb-3">No Logs</h3>
-<p class="text-on-surface-variant text-sm">Полная конфиденциальность. Ваши данные нигде не хранятся и не записываются.</p>
+<h3 class="font-headline text-base font-bold mb-1.5">No Logs</h3>
+<p class="text-on-surface-variant text-xs leading-relaxed">Содержимое трафика не пишется. Только данные сессии и подписки.</p>
 </div>
-<div class="bg-surface-container-high p-8 rounded-xl border border-outline-variant/10">
-<div class="w-12 h-12 bg-primary-container/10 rounded-lg flex items-center justify-center mb-6">
-<span class="material-symbols-outlined text-primary-container">public</span>
+<div class="wx-card rounded-xl p-5">
+<div class="w-10 h-10 bg-primary/10 border border-primary/30 rounded-lg flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary text-[20px]">public</span>
 </div>
-<h3 class="font-headline text-xl font-bold mb-3">Global Access</h3>
-<p class="text-on-surface-variant text-sm">Более 100 серверов по всему миру. Получайте доступ к сервисам из любой точки мира.</p>
+<h3 class="font-headline text-base font-bold mb-1.5">Глобально</h3>
+<p class="text-on-surface-variant text-xs leading-relaxed">4 страны на старте: NL · USA · FI · FR. Failover между ними.</p>
 </div>
 </div>
 </div>
 </section>
 
-<!-- Dynamic Map Section -->
-<section id="map-section" class="px-6 py-12">
-<div class="bg-surface-container-lowest rounded-2xl overflow-hidden h-[300px] relative border border-outline-variant/10">
-<img class="w-full h-full object-cover opacity-40 grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcPI7dNS4rA8QvzPzuP5j6jCaeZCww4fNYQSU9xW2kniDb-iXfiulZhj8qmrjrNtAj3bGoe5CAwvU-yypjw8Wi8VAetuZzNRRYnl2ACChlVjL8DLBVk_EncqXL0DNn8q6fpZPoDg_DKF7EDKPrIXOwYyhueRdtHzba00tobI5y4yKIMz23WPpCC_mEkTtRYAolKVaTB8SrZ-ifxUAmLQljSJN1Xedm9Xd3-1ERzmOxMOGIvOo7dnAksH4CwTFljL5i52qzlwrqorY" alt="World Map">
-<div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent"></div>
-<div class="absolute bottom-6 left-6 right-6 flex items-center justify-between">
+<!-- Status Section -->
+<section id="map-section" class="px-5 py-6 max-w-3xl mx-auto">
+<div class="wx-card rounded-2xl overflow-hidden relative">
+<div class="absolute inset-0 opacity-[0.04] pointer-events-none" style="background-image: radial-gradient(circle at 30% 50%, var(--wx-cyan) 0%, transparent 50%);"></div>
+<div class="relative p-6 flex items-center justify-between">
 <div>
-<div class="text-primary text-xs font-bold tracking-[0.2em] uppercase mb-1">Current Node</div>
-<div class="text-xl font-headline font-bold">Amsterdam, Netherlands</div>
+<div class="text-primary text-[11px] font-bold tracking-[0.12em] uppercase mb-1.5">Current node</div>
+<div class="text-lg font-headline font-bold">Amsterdam · NL</div>
+<div class="text-on-surface-variant text-xs font-mono mt-1">109.248.162.180</div>
 </div>
-<div class="flex items-center gap-2 bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md">
-<span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-PROTECTED
+<div class="wx-chip wx-chip-success">
+<span class="w-1.5 h-1.5 bg-[#00E78B] rounded-full animate-pulse"></span>
+Protected
 </div>
 </div>
 </div>
@@ -435,37 +536,38 @@ PROTECTED
 </main>
 
 <!-- Payment Modal -->
-<div id="payment-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto">
-<div class="bg-surface-container w-full max-w-2xl rounded-2xl p-6 md:p-8 my-8 relative">
-<button id="payment-close-btn" class="absolute top-4 right-4 text-on-surface-variant hover:text-primary" aria-label="Закрыть">
+<div id="payment-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-start md:items-center justify-center p-4 overflow-y-auto">
+<div class="wx-card-elevated w-full max-w-lg rounded-2xl p-6 my-8 relative">
+<button id="payment-close-btn" class="absolute top-4 right-4 text-on-surface-variant hover:text-primary transition-colors" aria-label="Закрыть">
 <span class="material-symbols-outlined">close</span>
 </button>
-<h2 id="payment-modal-title" class="font-headline text-2xl font-bold mb-2">Оформить подписку</h2>
-<p id="payment-modal-subtitle" class="text-on-surface-variant text-sm mb-6">Для создания ключа и работы VPN нужна активная подписка. Оплата ручная — после перевода нажмите «Я оплатил», админ подтвердит.</p>
+<div class="text-[11px] text-primary uppercase tracking-[0.12em] font-bold mb-1">Подписка</div>
+<h2 id="payment-modal-title" class="font-headline text-xl font-bold mb-2">Оформить подписку</h2>
+<p id="payment-modal-subtitle" class="text-on-surface-variant text-xs mb-5 leading-relaxed">Подписка нужна для создания и работы ключей. После перевода нажмите «Я оплатил» — админ подтвердит.</p>
 
-<div id="renewal-preview" class="hidden bg-surface-container-high border border-primary/30 rounded-xl p-4 mb-4 text-sm"></div>
+<div id="renewal-preview" class="hidden wx-card border-primary/40 rounded-lg p-4 mb-4 text-sm"></div>
 
-<label class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider">Выберите тариф</label>
-<div id="tariff-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2 mb-6">
-<div class="text-sm text-on-surface-variant col-span-full">Загрузка...</div>
+<label class="text-[11px] text-on-surface-variant font-semibold uppercase tracking-[0.12em]">Тариф</label>
+<div id="tariff-grid" class="grid grid-cols-2 gap-2 mt-2 mb-5">
+<div class="text-sm text-on-surface-variant col-span-full font-mono uppercase tracking-wider">Загрузка...</div>
 </div>
 
-<div class="bg-surface-container-high rounded-xl p-4 mb-4">
-<div class="text-xs text-primary font-bold uppercase tracking-wider mb-2">Реквизиты для оплаты</div>
-<div id="payment-info" class="text-sm text-on-surface space-y-2"></div>
-<div id="payment-note" class="text-xs text-on-surface-variant mt-3 pt-3 border-t border-outline-variant/10"></div>
+<div class="wx-card rounded-lg p-4 mb-4">
+<div class="text-[11px] text-primary font-bold uppercase tracking-[0.12em] mb-2">Реквизиты</div>
+<div id="payment-info" class="text-sm text-on-surface space-y-1.5 font-mono"></div>
+<div id="payment-note" class="text-[11px] text-on-surface-variant mt-3 pt-3 border-t border-outline-variant"></div>
 </div>
 
-<div id="payment-error" class="text-error text-sm mb-3 hidden"></div>
-<button id="i-paid-btn" class="primary-gradient text-on-primary py-3 rounded-full font-bold w-full active:scale-95 transition-all mb-4 disabled:opacity-50">
+<div id="payment-error" class="text-error text-xs mb-3 hidden"></div>
+<button id="i-paid-btn" class="primary-gradient py-3.5 rounded-lg font-bold text-sm w-full active:scale-[0.98] transition-all mb-4 disabled:opacity-40 uppercase tracking-wider">
 <span id="i-paid-btn-label">Я оплатил — отправить на проверку</span>
 </button>
 
-<div class="border-t border-outline-variant/20 pt-5">
-<label class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider">Или введите промокод</label>
+<div class="border-t border-outline-variant pt-5">
+<label class="text-[11px] text-on-surface-variant font-semibold uppercase tracking-[0.12em]">Или промокод</label>
 <div class="flex flex-col sm:flex-row gap-2 mt-2">
-<input id="promo-input" placeholder="PROMO2025" autocomplete="off" class="flex-1 min-w-0 bg-surface-container-high border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary uppercase">
-<button id="promo-btn" class="bg-primary/20 text-primary px-5 py-3 rounded-xl font-semibold active:scale-95 transition-all">Активировать</button>
+<input id="promo-input" placeholder="PROMO2025" autocomplete="off" class="wx-input flex-1 min-w-0 rounded-lg px-4 py-3 font-mono uppercase text-sm">
+<button id="promo-btn" class="border border-primary/40 hover:border-primary text-primary px-5 py-3 rounded-lg font-semibold text-xs uppercase tracking-wider transition-colors">Активировать</button>
 </div>
 <div id="promo-msg" class="text-xs mt-2 hidden"></div>
 </div>
@@ -473,58 +575,59 @@ PROTECTED
 </div>
 
 <!-- Client Picker Modal -->
-<div id="client-picker-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto">
-<div class="bg-surface-container w-full max-w-md rounded-2xl p-6 md:p-8 my-8 relative">
-<button class="absolute top-4 right-4 text-on-surface-variant hover:text-primary" data-close-modal="client-picker-modal" aria-label="Закрыть">
+<div id="client-picker-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-start md:items-center justify-center p-4 overflow-y-auto">
+<div class="wx-card-elevated w-full max-w-md rounded-2xl p-6 my-8 relative">
+<button class="absolute top-4 right-4 text-on-surface-variant hover:text-primary transition-colors" data-close-modal="client-picker-modal" aria-label="Закрыть">
 <span class="material-symbols-outlined">close</span>
 </button>
-<h2 class="font-headline text-2xl font-bold mb-2">Открыть в приложении</h2>
-<p class="text-on-surface-variant text-sm mb-6">Нажмите на ваше VPN-приложение — ключ импортируется автоматически.</p>
+<div class="text-[11px] text-primary uppercase tracking-[0.12em] font-bold mb-1">Импорт</div>
+<h2 class="font-headline text-xl font-bold mb-2">Открыть в приложении</h2>
+<p class="text-on-surface-variant text-xs mb-5">Нажмите на ваш клиент — ключ импортируется автоматически.</p>
 
-<div class="space-y-3">
-<a id="open-v2box" href="#" class="flex items-center gap-4 p-4 bg-surface-container-high hover:bg-surface-container-highest rounded-xl transition-colors text-left">
-<div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-<span class="material-symbols-outlined text-primary">bolt</span>
+<div class="space-y-2">
+<a id="open-v2box" href="#" class="flex items-center gap-3 p-3.5 wx-card hover:border-primary rounded-lg transition-colors text-left group">
+<div class="w-10 h-10 bg-primary/10 border border-primary/30 rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary text-[20px]">bolt</span>
 </div>
 <div class="flex-1 min-w-0">
-<div class="font-bold text-on-surface">V2Box</div>
-<div class="text-xs text-on-surface-variant">iOS · macOS · Android</div>
+<div class="font-bold text-on-surface text-sm">V2Box</div>
+<div class="text-[11px] text-on-surface-variant uppercase tracking-wider mt-0.5">iOS · macOS · Android</div>
 </div>
-<span class="material-symbols-outlined text-on-surface-variant">arrow_forward</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">arrow_forward</span>
 </a>
 
-<a id="open-v2raytun" href="#" class="flex items-center gap-4 p-4 bg-surface-container-high hover:bg-surface-container-highest rounded-xl transition-colors text-left">
-<div class="w-12 h-12 bg-tertiary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-<span class="material-symbols-outlined text-tertiary">rocket</span>
+<a id="open-v2raytun" href="#" class="flex items-center gap-3 p-3.5 wx-card hover:border-primary rounded-lg transition-colors text-left group">
+<div class="w-10 h-10 bg-primary/10 border border-primary/30 rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary text-[20px]">rocket</span>
 </div>
 <div class="flex-1 min-w-0">
-<div class="font-bold text-on-surface">V2RayTun</div>
-<div class="text-xs text-on-surface-variant">iOS · Android</div>
+<div class="font-bold text-on-surface text-sm">V2RayTun</div>
+<div class="text-[11px] text-on-surface-variant uppercase tracking-wider mt-0.5">iOS · Android</div>
 </div>
-<span class="material-symbols-outlined text-on-surface-variant">arrow_forward</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">arrow_forward</span>
 </a>
 
-<a id="open-happ" href="#" class="flex items-center gap-4 p-4 bg-surface-container-high hover:bg-surface-container-highest rounded-xl transition-colors text-left">
-<div class="w-12 h-12 bg-primary-container/10 rounded-lg flex items-center justify-center flex-shrink-0">
-<span class="material-symbols-outlined text-primary-container">shield</span>
+<a id="open-happ" href="#" class="flex items-center gap-3 p-3.5 wx-card hover:border-primary rounded-lg transition-colors text-left group">
+<div class="w-10 h-10 bg-primary/10 border border-primary/30 rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary text-[20px]">shield</span>
 </div>
 <div class="flex-1 min-w-0">
-<div class="font-bold text-on-surface">Happ Plus</div>
-<div class="text-xs text-on-surface-variant">iOS · Android · Windows</div>
+<div class="font-bold text-on-surface text-sm">Happ Plus</div>
+<div class="text-[11px] text-on-surface-variant uppercase tracking-wider mt-0.5">iOS · Android · Windows</div>
 </div>
-<span class="material-symbols-outlined text-on-surface-variant">arrow_forward</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">arrow_forward</span>
 </a>
 </div>
 
-<div class="border-t border-outline-variant/20 mt-6 pt-6 text-center">
-<p class="text-sm text-on-surface-variant mb-1">Нет ни одного из этих приложений?</p>
-<p class="text-sm text-on-surface mb-4">Установите <strong>Happ Plus</strong> и попробуйте снова:</p>
+<div class="border-t border-outline-variant mt-5 pt-5 text-center">
+<p class="text-xs text-on-surface-variant mb-1">Нет ни одного из этих приложений?</p>
+<p class="text-sm text-on-surface mb-3">Установите <strong>Happ Plus</strong>:</p>
 <div class="flex gap-2 justify-center flex-wrap">
-<a href="https://apps.apple.com/search?term=Happ%20Plus" target="_blank" rel="noopener" class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5">
-<span class="material-symbols-outlined text-base">apple</span> App Store
+<a href="https://apps.apple.com/search?term=Happ%20Plus" target="_blank" rel="noopener" class="border border-outline hover:border-primary text-on-surface hover:text-primary px-4 py-2 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1.5 uppercase tracking-wider">
+<span class="material-symbols-outlined text-[14px]">apple</span> App Store
 </a>
-<a href="https://play.google.com/store/search?q=Happ%20Plus&c=apps" target="_blank" rel="noopener" class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5">
-<span class="material-symbols-outlined text-base">android</span> Google Play
+<a href="https://play.google.com/store/search?q=Happ%20Plus&c=apps" target="_blank" rel="noopener" class="border border-outline hover:border-primary text-on-surface hover:text-primary px-4 py-2 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1.5 uppercase tracking-wider">
+<span class="material-symbols-outlined text-[14px]">android</span> Google Play
 </a>
 </div>
 </div>
@@ -532,9 +635,9 @@ PROTECTED
 </div>
 
 <!-- Privacy Policy Modal -->
-<div id="privacy-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto">
-<div class="bg-surface-container w-full max-w-2xl rounded-2xl p-6 md:p-8 my-8 relative">
-<button class="absolute top-4 right-4 text-on-surface-variant hover:text-primary" data-close-modal="privacy-modal" aria-label="Закрыть">
+<div id="privacy-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-start md:items-center justify-center p-4 overflow-y-auto">
+<div class="wx-card-elevated w-full max-w-lg rounded-2xl p-6 my-8 relative">
+<button class="absolute top-4 right-4 text-on-surface-variant hover:text-primary transition-colors" data-close-modal="privacy-modal" aria-label="Закрыть">
 <span class="material-symbols-outlined">close</span>
 </button>
 <h2 class="font-headline text-2xl font-bold mb-4">Политика конфиденциальности</h2>
@@ -561,9 +664,9 @@ PROTECTED
 </div>
 
 <!-- PD Consent Modal -->
-<div id="consent-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto">
-<div class="bg-surface-container w-full max-w-2xl rounded-2xl p-6 md:p-8 my-8 relative">
-<button class="absolute top-4 right-4 text-on-surface-variant hover:text-primary" data-close-modal="consent-modal" aria-label="Закрыть">
+<div id="consent-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-start md:items-center justify-center p-4 overflow-y-auto">
+<div class="wx-card-elevated w-full max-w-lg rounded-2xl p-6 my-8 relative">
+<button class="absolute top-4 right-4 text-on-surface-variant hover:text-primary transition-colors" data-close-modal="consent-modal" aria-label="Закрыть">
 <span class="material-symbols-outlined">close</span>
 </button>
 <h2 class="font-headline text-2xl font-bold mb-4">Согласие на обработку персональных данных</h2>
@@ -580,17 +683,20 @@ PROTECTED
 </div>
 
 <!-- Footer -->
-<footer class="w-full bg-[#0b0e14] border-t border-[#45484f]/15">
-<div class="w-full px-8 py-12 flex flex-col items-center gap-8 text-center">
-<div class="text-lg font-bold text-[#ecedf6] font-headline tracking-tighter">BYPASS_OS</div>
-<div class="flex flex-wrap justify-center gap-6 text-[#ecedf6]/50 text-sm font-['Inter']">
-<button type="button" class="hover:text-[#00F0FF] transition-all cursor-pointer" data-open-modal="privacy-modal">Privacy</button>
-<button type="button" class="hover:text-[#00F0FF] transition-all cursor-pointer" data-open-modal="consent-modal">Terms</button>
-<a class="hover:text-[#00F0FF] transition-all" href="#">Protocol</a>
-<a class="hover:text-[#00F0FF] transition-all" href="#">Status</a>
+<footer class="w-full bg-black border-t border-outline-variant mt-8">
+<div class="w-full max-w-3xl mx-auto px-5 py-10 flex flex-col items-center gap-6 text-center">
+<div class="flex items-center gap-2.5">
+<img src="/static/logo.svg" alt="WIREX" class="h-6 w-6 rounded">
+<span class="text-base font-bold text-on-surface font-headline tracking-wide">WIREX</span>
 </div>
-<div class="text-[#ecedf6]/30 text-[10px] tracking-widest font-mono uppercase">
-© 2026 BYPASS. ENCRYPTED ACCESS.
+<div class="flex flex-wrap justify-center gap-5 text-on-surface-variant text-xs uppercase tracking-[0.12em] font-medium">
+<button type="button" class="hover:text-primary transition-colors cursor-pointer" data-open-modal="privacy-modal">Privacy</button>
+<button type="button" class="hover:text-primary transition-colors cursor-pointer" data-open-modal="consent-modal">Consent</button>
+<a class="hover:text-primary transition-colors" href="#">Protocols</a>
+<a class="hover:text-primary transition-colors" href="#">Status</a>
+</div>
+<div class="text-on-surface-variant/60 text-[10px] tracking-[0.2em] font-mono uppercase">
+© 2026 WIREX · Encrypted Access
 </div>
 </div>
 </footer>
@@ -954,7 +1060,7 @@ function renderServerButtons(busyServers = [], allowedServer = null) {
         const isFull = !!s.full && key !== allowedServer;
         const disabled = isBusy || isFull;
         const btn = document.createElement('button');
-        btn.className = 'server-btn bg-surface-container-high p-4 rounded-xl text-center transition-all';
+        btn.className = 'server-btn wx-card p-4 rounded-xl text-center transition-all';
         btn.setAttribute('data-server', key);
         btn.disabled = disabled;
         let label = '';
@@ -1225,7 +1331,7 @@ function renderSubBanner() {
                         <div class="text-sm text-on-surface-variant">Тариф: ${escapeHtml(label)} · ${pendingRequest.price}₽. Админ подтвердит доступ в ближайшее время.</div>
                     </div>
                 </div>
-                <button id="cancel-request-btn" class="bg-surface-container-high px-4 py-2 rounded-full text-sm hover:text-error active:scale-95 transition-all">Отменить заявку</button>
+                <button id="cancel-request-btn" class="border border-outline hover:border-error hover:text-error text-on-surface-variant px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider font-medium transition-colors">Отменить заявку</button>
             </div>`;
         document.getElementById('cancel-request-btn').onclick = cancelPaymentRequest;
         return;
@@ -1253,7 +1359,7 @@ function renderSubBanner() {
                             <div class="text-sm text-on-surface-variant">${escapeHtml(subExpiresText())}</div>
                         </div>
                     </div>
-                    <button id="extend-sub-btn" class="bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-semibold active:scale-95 transition-all">Продлить</button>
+                    <button id="extend-sub-btn" class="border border-primary/40 hover:border-primary text-primary px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors">Продлить</button>
                 </div>`;
             document.getElementById('extend-sub-btn').onclick = openPaymentModal;
         }
@@ -1267,7 +1373,7 @@ function renderSubBanner() {
                         <div class="text-sm text-on-surface-variant">Для создания и работы ключей нужна подписка от 99₽/мес или промокод.</div>
                     </div>
                 </div>
-                <button id="subscribe-btn" class="primary-gradient text-on-primary px-5 py-2 rounded-full text-sm font-bold active:scale-95 transition-all whitespace-nowrap">Оформить подписку</button>
+                <button id="subscribe-btn" class="primary-gradient px-4 py-2.5 rounded-lg text-xs font-bold active:scale-[0.98] transition-all whitespace-nowrap uppercase tracking-wider">Оформить подписку</button>
             </div>`;
         document.getElementById('subscribe-btn').onclick = openPaymentModal;
     }
@@ -1315,10 +1421,10 @@ function renderTariffGrid() {
         const discount = cheapest > 0 ? Math.round(100 - (perDay / (tariffs[0].price / tariffs[0].days)) * 100) : 0;
         const active = selectedTariffId === t.id;
         return `
-            <button data-tariff="${t.id}" class="tariff-tile text-left p-4 rounded-xl border-2 transition-all ${active ? 'border-primary bg-primary/10' : 'border-outline-variant/20 bg-surface-container-high hover:border-primary/50'}">
-                <div class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider">${escapeHtml(t.label)}</div>
-                <div class="text-2xl font-bold font-headline mt-1">${t.price}₽</div>
-                <div class="text-xs text-on-surface-variant mt-1">~${perDay.toFixed(1)}₽/день${discount > 0 ? ` · -${discount}%` : ''}</div>
+            <button data-tariff="${t.id}" class="tariff-tile text-left p-3 rounded-lg border transition-all ${active ? 'border-primary bg-[rgba(0,238,252,0.06)] wx-glow-sm' : 'border-outline bg-surface-container hover:border-primary/60'}">
+                <div class="text-[10px] text-on-surface-variant font-semibold uppercase tracking-[0.12em]">${escapeHtml(t.label)}</div>
+                <div class="text-xl font-bold font-headline mt-1 ${active ? 'text-primary' : ''}">${t.price}₽</div>
+                <div class="text-[10px] text-on-surface-variant mt-1 font-mono">~${perDay.toFixed(1)}₽/день${discount > 0 ? ` · -${discount}%` : ''}</div>
             </button>`;
     }).join('');
     grid.querySelectorAll('[data-tariff]').forEach(btn => {
@@ -1497,24 +1603,28 @@ function renderMyKeys() {
     empty.classList.add('hidden');
     list.classList.remove('hidden');
     list.innerHTML = myKeys.map((k, i) => `
-        <div class="bg-surface-container p-6 rounded-xl flex flex-col">
-            <div class="flex items-start justify-between mb-4">
-                <div>
-                    <div class="text-3xl mb-1">${k.server_flag || ''}</div>
-                    <div class="font-headline font-bold text-lg break-all">${escapeHtml(k.username)}</div>
-                    <div class="text-xs text-on-surface-variant mt-1">${escapeHtml(k.server_name)} · ${fmtDate(k.created)}</div>
+        <div class="wx-card p-5 rounded-xl flex flex-col">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="text-2xl flex-shrink-0">${k.server_flag || '🌐'}</div>
+                    <div class="min-w-0">
+                        <div class="font-headline font-bold text-base truncate">${escapeHtml(k.username)}</div>
+                        <div class="text-[11px] text-on-surface-variant uppercase tracking-wider mt-0.5">${escapeHtml(k.server_name)} · ${fmtDate(k.created)}</div>
+                    </div>
                 </div>
-                <button class="text-error text-xs hover:underline flex items-center gap-1" data-del="${i}" title="Удалить ключ">
-                    <span class="material-symbols-outlined text-base">delete</span> Удалить
+                <button class="text-on-surface-variant hover:text-error transition-colors flex-shrink-0" data-del="${i}" title="Удалить ключ" aria-label="Удалить">
+                    <span class="material-symbols-outlined text-[20px]">delete</span>
                 </button>
             </div>
-            <button class="primary-gradient text-on-primary py-2.5 rounded-full font-semibold text-sm active:scale-95 transition-all mb-2" data-show="${i}">
-                Показать QR и ссылки
-            </button>
-            <button class="bg-surface-container-high text-on-surface py-2 rounded-full font-semibold text-sm active:scale-95 transition-all mb-2 flex items-center justify-center gap-1" data-replace="${i}" title="Пересоздаст ключ на этом сервере">
-                <span class="material-symbols-outlined text-base">swap_horiz</span> Сменить ключ
-            </button>
-            <div class="text-xs text-on-surface-variant font-mono opacity-60 truncate mt-1" title="${escapeHtml(k.sub_url)}">${escapeHtml(k.sub_url)}</div>
+            <div class="grid grid-cols-2 gap-2">
+                <button class="primary-gradient py-2.5 rounded-lg font-semibold text-xs active:scale-[0.98] transition-all uppercase tracking-wider inline-flex items-center justify-center gap-1.5" data-show="${i}">
+                    <span class="material-symbols-outlined text-[14px]">qr_code_2</span> Открыть
+                </button>
+                <button class="border border-outline hover:border-primary hover:text-primary text-on-surface-variant py-2.5 rounded-lg font-semibold text-xs active:scale-[0.98] transition-colors uppercase tracking-wider inline-flex items-center justify-center gap-1.5" data-replace="${i}" title="Пересоздаст ключ на этом сервере">
+                    <span class="material-symbols-outlined text-[14px]">swap_horiz</span> Сменить
+                </button>
+            </div>
+            <div class="text-[10px] text-on-surface-variant/70 font-mono truncate mt-3" title="${escapeHtml(k.sub_url)}">${escapeHtml(k.sub_url)}</div>
         </div>
     `).join('');
 
