@@ -70,79 +70,83 @@ fi
 
 SID="$SID_DEFAULT"
 
-# 3. Конфиг
-if [ -f "$XRAY_CONFIG" ] && python3 -c "import json; json.load(open('$XRAY_CONFIG'))" 2>/dev/null; then
-    echo "[3/5] Конфиг уже есть — оставляю как есть, только подменю приватный ключ/порт/dest если надо" >&2
-    python3 - "$XRAY_CONFIG" "$PRIV" "$PBK" "$SID" "$DEST" "$PORT" <<'PY' >&2
-import json, sys
-path, priv, pbk, sid, dest, port = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], int(sys.argv[6])
-with open(path) as f: c = json.load(f)
-ib = next((i for i in c.get("inbounds", []) if i.get("protocol") == "vless"), None)
-if ib:
+# 3. Конфиг (идемпотентно — чинит конфиг, даже если он битый/неполный/чужой)
+echo "[3/5] Конфигурирую $XRAY_CONFIG..." >&2
+python3 - "$XRAY_CONFIG" "$PRIV" "$SID" "$DEST" "$PORT" <<'PY' >&2
+import json, os, sys
+path, priv, sid, dest, port = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5])
+sni = dest.split(":")[0]
+
+c = {}
+if os.path.exists(path):
+    try:
+        with open(path) as f: c = json.load(f)
+    except Exception:
+        c = {}
+
+c.setdefault("log", {"loglevel": "warning"})
+c.setdefault("api", {"tag": "api", "services": ["HandlerService", "LoggerService", "StatsService"]})
+c.setdefault("stats", {})
+c.setdefault("policy", {
+    "levels": {"0": {"statsUserUplink": True, "statsUserDownlink": True}},
+    "system": {"statsInboundUplink": True, "statsInboundDownlink": True},
+})
+c.setdefault("inbounds", [])
+c.setdefault("outbounds", [
+    {"protocol": "freedom", "tag": "direct"},
+    {"protocol": "blackhole", "tag": "block"},
+])
+c.setdefault("routing", {"rules": [{"type": "field", "inboundTag": ["api"], "outboundTag": "api"}]})
+
+# api inbound (нужен для статистики)
+if not any(i.get("tag") == "api" for i in c["inbounds"]):
+    c["inbounds"].append({
+        "tag": "api",
+        "listen": "127.0.0.1",
+        "port": 10085,
+        "protocol": "dokodemo-door",
+        "settings": {"address": "127.0.0.1"},
+    })
+
+# vless inbound
+ib = next((i for i in c["inbounds"] if i.get("protocol") == "vless"), None)
+if ib is None:
+    c["inbounds"].append({
+        "port": port,
+        "protocol": "vless",
+        "settings": {"clients": [], "decryption": "none"},
+        "streamSettings": {
+            "network": "tcp",
+            "security": "reality",
+            "realitySettings": {
+                "show": False,
+                "dest": dest,
+                "xver": 0,
+                "serverNames": [sni],
+                "privateKey": priv,
+                "shortIds": [sid],
+            },
+        },
+        "sniffing": {"enabled": True, "destOverride": ["http", "tls"]},
+    })
+else:
     ib["port"] = port
-    rs = ib.setdefault("streamSettings", {}).setdefault("realitySettings", {})
+    ib.setdefault("settings", {}).setdefault("clients", [])
+    ib["settings"].setdefault("decryption", "none")
+    ss = ib.setdefault("streamSettings", {})
+    ss["network"] = "tcp"
+    ss["security"] = "reality"
+    rs = ss.setdefault("realitySettings", {})
+    rs["show"] = False
+    rs["dest"] = dest
+    rs["xver"] = 0
+    rs["serverNames"] = [sni]
     rs["privateKey"] = priv
     rs["shortIds"] = [sid]
-    rs["dest"] = dest
-    rs["serverNames"] = [dest.split(":")[0]]
+    ib.setdefault("sniffing", {"enabled": True, "destOverride": ["http", "tls"]})
+
 with open(path, "w") as f: json.dump(c, f, indent=2)
 PY
-else
-    echo "[3/5] Пишу новый конфиг $XRAY_CONFIG..." >&2
-    cat > "$XRAY_CONFIG" <<EOF
-{
-  "log": { "loglevel": "warning" },
-  "api": {
-    "tag": "api",
-    "services": ["HandlerService", "LoggerService", "StatsService"]
-  },
-  "stats": {},
-  "policy": {
-    "levels": { "0": { "statsUserUplink": true, "statsUserDownlink": true } },
-    "system": { "statsInboundUplink": true, "statsInboundDownlink": true }
-  },
-  "inbounds": [
-    {
-      "tag": "api",
-      "listen": "127.0.0.1",
-      "port": 10085,
-      "protocol": "dokodemo-door",
-      "settings": { "address": "127.0.0.1" }
-    },
-    {
-      "port": $PORT,
-      "protocol": "vless",
-      "settings": {
-        "clients": [],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "reality",
-        "realitySettings": {
-          "show": false,
-          "dest": "$DEST",
-          "xver": 0,
-          "serverNames": ["$SNI"],
-          "privateKey": "$PRIV",
-          "shortIds": ["$SID"]
-        }
-      },
-      "sniffing": { "enabled": true, "destOverride": ["http", "tls"] }
-    }
-  ],
-  "outbounds": [
-    { "protocol": "freedom", "tag": "direct" },
-    { "protocol": "blackhole", "tag": "block" }
-  ],
-  "routing": {
-    "rules": [
-      { "type": "field", "inboundTag": ["api"], "outboundTag": "api" }
-    ]
-  }
-}
-EOF
-fi
 
 # 4. Firewall
 echo "[4/5] Открываю TCP $PORT..." >&2
