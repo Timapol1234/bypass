@@ -288,17 +288,16 @@
             <span class="text-[#a9abb3] text-xs">SSH user</span>
             <input id="srv-user" type="text" value="root" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white font-mono">
           </label>
-          <label class="block">
-            <span class="text-[#a9abb3] text-xs">Страна (ISO 2)</span>
-            <input id="srv-country" type="text" placeholder="DE" maxlength="2" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white font-mono uppercase">
+          <label class="block md:col-span-2">
+            <span class="text-[#a9abb3] text-xs">Страна <span id="srv-flag-preview" class="ml-1"></span></span>
+            <input id="srv-country-search" list="srv-country-list" type="text" placeholder="Начните вводить: Германия / DE / Germany" autocomplete="off" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white">
+            <datalist id="srv-country-list"></datalist>
+            <input id="srv-country" type="hidden">
+            <input id="srv-flag" type="hidden">
           </label>
-          <label class="block">
-            <span class="text-[#a9abb3] text-xs">Название (для UI)</span>
+          <label class="block md:col-span-2">
+            <span class="text-[#a9abb3] text-xs">Название для UI (по умолчанию из страны)</span>
             <input id="srv-name" type="text" placeholder="Германия" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white">
-          </label>
-          <label class="block">
-            <span class="text-[#a9abb3] text-xs">Флаг (эмодзи)</span>
-            <input id="srv-flag" type="text" placeholder="🇩🇪" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white">
           </label>
           <label class="block">
             <span class="text-[#a9abb3] text-xs">Bandwidth Мбит/с</span>
@@ -1208,8 +1207,112 @@ async function removeServer(key, force) {
   await loadServerPool();
 }
 
+// Список стран для пикера. ISO 3166-1 alpha-2 → русское имя.
+// Покрытие — около 60 популярных юрисдикций для VPN-узлов; флаг считается из ISO кода.
+const COUNTRY_LIST = [
+  ['NL','Нидерланды','Netherlands'],['DE','Германия','Germany'],['FR','Франция','France'],
+  ['FI','Финляндия','Finland'],['SE','Швеция','Sweden'],['NO','Норвегия','Norway'],
+  ['DK','Дания','Denmark'],['IS','Исландия','Iceland'],['EE','Эстония','Estonia'],
+  ['LV','Латвия','Latvia'],['LT','Литва','Lithuania'],['PL','Польша','Poland'],
+  ['CZ','Чехия','Czechia'],['SK','Словакия','Slovakia'],['AT','Австрия','Austria'],
+  ['CH','Швейцария','Switzerland'],['BE','Бельгия','Belgium'],['LU','Люксембург','Luxembourg'],
+  ['IE','Ирландия','Ireland'],['GB','Великобритания','United Kingdom'],['ES','Испания','Spain'],
+  ['PT','Португалия','Portugal'],['IT','Италия','Italy'],['GR','Греция','Greece'],
+  ['HU','Венгрия','Hungary'],['RO','Румыния','Romania'],['BG','Болгария','Bulgaria'],
+  ['HR','Хорватия','Croatia'],['SI','Словения','Slovenia'],['MD','Молдова','Moldova'],
+  ['UA','Украина','Ukraine'],['RS','Сербия','Serbia'],['MK','Северная Македония','North Macedonia'],
+  ['AL','Албания','Albania'],['CY','Кипр','Cyprus'],['MT','Мальта','Malta'],
+  ['TR','Турция','Türkiye'],['GE','Грузия','Georgia'],['AM','Армения','Armenia'],
+  ['AZ','Азербайджан','Azerbaijan'],['KZ','Казахстан','Kazakhstan'],['UZ','Узбекистан','Uzbekistan'],
+  ['KG','Кыргызстан','Kyrgyzstan'],['TJ','Таджикистан','Tajikistan'],['AE','ОАЭ','UAE'],
+  ['IL','Израиль','Israel'],['IN','Индия','India'],['HK','Гонконг','Hong Kong'],
+  ['SG','Сингапур','Singapore'],['JP','Япония','Japan'],['KR','Южная Корея','South Korea'],
+  ['TW','Тайвань','Taiwan'],['VN','Вьетнам','Vietnam'],['TH','Таиланд','Thailand'],
+  ['ID','Индонезия','Indonesia'],['MY','Малайзия','Malaysia'],['AU','Австралия','Australia'],
+  ['NZ','Новая Зеландия','New Zealand'],['US','США','United States'],['CA','Канада','Canada'],
+  ['MX','Мексика','Mexico'],['BR','Бразилия','Brazil'],['AR','Аргентина','Argentina'],
+  ['CL','Чили','Chile'],['ZA','ЮАР','South Africa'],['EG','Египет','Egypt'],
+];
+
+// ISO 2-letter → emoji через regional indicator unicode (A=0x1F1E6 + offset).
+function isoToFlag(iso) {
+  if (!iso || iso.length !== 2) return '';
+  const cc = iso.toUpperCase();
+  return String.fromCodePoint(0x1F1E6 + cc.charCodeAt(0) - 65, 0x1F1E6 + cc.charCodeAt(1) - 65);
+}
+
+function populateCountryDatalist() {
+  const dl = document.getElementById('srv-country-list');
+  if (!dl || dl.dataset.filled) return;
+  dl.dataset.filled = '1';
+  dl.innerHTML = COUNTRY_LIST.map(([iso, ru, en]) =>
+    `<option value="${isoToFlag(iso)} ${ru} (${iso})" data-iso="${iso}" data-name="${ru}"></option>`
+  ).join('');
+}
+
+// Парсит выбор из datalist обратно в ISO/имя/флаг.
+function resolveCountrySelection(rawValue) {
+  const v = (rawValue || '').trim();
+  if (!v) return null;
+  // 1) Явный формат "🇩🇪 Германия (DE)" — берём ISO из скобок.
+  const m = v.match(/\(([A-Za-z]{2})\)\s*$/);
+  if (m) {
+    const iso = m[1].toUpperCase();
+    const hit = COUNTRY_LIST.find(([c]) => c === iso);
+    if (hit) return { iso, name: hit[1], flag: isoToFlag(iso) };
+  }
+  // 2) Голый ISO: "DE"
+  if (/^[A-Za-z]{2}$/.test(v)) {
+    const iso = v.toUpperCase();
+    const hit = COUNTRY_LIST.find(([c]) => c === iso);
+    if (hit) return { iso, name: hit[1], flag: isoToFlag(iso) };
+  }
+  // 3) Поиск по русскому/английскому имени (case-insensitive substring).
+  const low = v.toLowerCase();
+  const byName = COUNTRY_LIST.find(([, ru, en]) =>
+    ru.toLowerCase() === low || en.toLowerCase() === low
+  ) || COUNTRY_LIST.find(([, ru, en]) =>
+    ru.toLowerCase().startsWith(low) || en.toLowerCase().startsWith(low)
+  );
+  if (byName) {
+    const [iso, ru] = byName;
+    return { iso, name: ru, flag: isoToFlag(iso) };
+  }
+  return null;
+}
+
+// Live-апдейт: на каждый ввод пробуем резолвить, заполняем hidden поля и превью.
+function syncCountryPicker() {
+  const search = document.getElementById('srv-country-search');
+  const hidIso = document.getElementById('srv-country');
+  const hidFlag = document.getElementById('srv-flag');
+  const preview = document.getElementById('srv-flag-preview');
+  const nameField = document.getElementById('srv-name');
+  if (!search) return;
+  const sel = resolveCountrySelection(search.value);
+  if (sel) {
+    hidIso.value = sel.iso;
+    hidFlag.value = sel.flag;
+    preview.textContent = sel.flag;
+    if (!nameField.value || nameField.dataset.autofill === '1') {
+      nameField.value = sel.name;
+      nameField.dataset.autofill = '1';
+    }
+  } else {
+    hidIso.value = '';
+    hidFlag.value = '';
+    preview.textContent = '';
+  }
+}
+
 document.getElementById('servers-add-btn')?.addEventListener('click', () => {
+  populateCountryDatalist();
   document.getElementById('server-add-form').classList.remove('hidden');
+});
+document.getElementById('srv-country-search')?.addEventListener('input', syncCountryPicker);
+document.getElementById('srv-name')?.addEventListener('input', (e) => {
+  // как только юзер сам редактирует — отключаем автозаполнение из пикера
+  if (e.isTrusted) e.target.dataset.autofill = '';
 });
 document.getElementById('server-add-close')?.addEventListener('click', () => {
   document.getElementById('server-add-form').classList.add('hidden');
@@ -1217,13 +1320,21 @@ document.getElementById('server-add-close')?.addEventListener('click', () => {
 document.getElementById('server-add-submit')?.addEventListener('click', async () => {
   const statusEl = document.getElementById('server-add-status');
   const btn = document.getElementById('server-add-submit');
+  // финальная синхронизация: вдруг юзер ввёл и сразу нажал submit
+  syncCountryPicker();
+  const country = document.getElementById('srv-country').value.trim().toUpperCase();
+  const flag = document.getElementById('srv-flag').value.trim();
+  if (!country) {
+    statusEl.innerHTML = '<span class="text-[#ff716c]">Выбери страну из списка (или введи ISO-код)</span>';
+    return;
+  }
   const body = {
     password: adminPass,
     ip: document.getElementById('srv-ip').value.trim(),
     ssh_user: document.getElementById('srv-user').value.trim() || 'root',
-    country: document.getElementById('srv-country').value.trim().toUpperCase(),
+    country,
     name: document.getElementById('srv-name').value.trim(),
-    flag: document.getElementById('srv-flag').value.trim(),
+    flag,
     bandwidth_mbps: parseInt(document.getElementById('srv-bw').value || '50', 10),
     backup_for: document.getElementById('srv-backup-for').value,
   };
@@ -1242,7 +1353,9 @@ document.getElementById('server-add-submit')?.addEventListener('click', async ()
     }
     statusEl.innerHTML = `<span class="text-[#6ee7b7]">OK · key=${escapeHtml(data.key)}</span>`;
     document.getElementById('server-add-form').classList.add('hidden');
-    ['srv-ip','srv-country','srv-name','srv-flag','srv-backup-for'].forEach(id => { document.getElementById(id).value = ''; });
+    ['srv-ip','srv-country','srv-name','srv-flag','srv-country-search','srv-backup-for'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('srv-flag-preview').textContent = '';
+    document.getElementById('srv-name').dataset.autofill = '';
     await loadServerPool();
   } catch (e) {
     statusEl.innerHTML = `<span class="text-[#ff716c]">Ошибка сети: ${escapeHtml(String(e))}</span>`;

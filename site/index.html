@@ -840,10 +840,6 @@ document.querySelectorAll('[data-close-modal]').forEach(el => {
     if (m) m.addEventListener('click', (e) => { if (e.target === m) closeModal(id); });
 });
 
-function utf8ToBase64(str) {
-    return btoa(unescape(encodeURIComponent(str)));
-}
-
 function updateSubStatusChip() {
     const chip = document.getElementById('sub-status-chip');
     if (!chip) return;
@@ -891,16 +887,15 @@ function updateSubStatusChip() {
 
 function buildClientDeepLinks(subUrl, vlessUrl, hy2Url) {
     const enc = encodeURIComponent(subUrl);
-    // Happ Plus блокирует HTTP-подписки ("небезопасная схема"), поэтому ему
-    // отдаём конфиги инлайн через base64 — без HTTP-фетча.
-    const inlineConfigs = [vlessUrl, hy2Url].filter(Boolean).join('\n');
-    const happPayload = inlineConfigs
-        ? encodeURIComponent(utf8ToBase64(inlineConfigs))
-        : enc;
+    // happ://add/<percent-encoded SUB_URL> — это формат, который ожидает Happ Plus
+    // (xraycore.org/misc/deeplink_proxy_clients). Раньше передавали base64
+    // от inline-конфигов — Happ интерпретировал это как URL и показывал
+    // «URL подписки не валидна». HTTP-подписку Happ принимает, но может
+    // показать предупреждение «небезопасная схема» — это не блокер.
     return {
         v2box: `v2box://install-sub?url=${enc}&name=BYPASS`,
         v2raytun: `v2raytun://import/${enc}`,
-        happ: `happ://add/${happPayload}`,
+        happ: `happ://add/${enc}`,
     };
 }
 
