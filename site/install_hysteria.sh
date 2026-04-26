@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Установщик Hysteria 2 для BYPASS VPN.
+# Установщик Hysteria 2 для WIREX.
 # Запуск: bash install_hysteria.sh
 # Работает на каждом из 4 серверов (Амстердам/USA/Финляндия/Франция).
 # Идемпотентный.
@@ -21,7 +21,7 @@ OBFS_FILE=$CONFIG_DIR/.obfs_password
 SNI="www.microsoft.com"
 AUTH_URL="http://109.248.162.180:8080/api/hy-auth"
 
-echo "=== BYPASS Hysteria 2 installer ==="
+echo "=== WIREX Hysteria 2 installer ==="
 
 # 0. Зависимости apt (на свежем сервере кэш может быть пустой;
 #    openssl нужен для самоподписанного серта, curl/ca-certificates — для get.hy2.sh).
@@ -69,7 +69,7 @@ fi
 # 4. Пишем канонический конфиг
 echo "[4/7] Записываю $CONFIG..."
 cat > "$CONFIG" <<EOF
-# BYPASS Hysteria 2 config — управляется install_hysteria.sh + /opt/vpn-site/app.py
+# WIREX Hysteria 2 config — управляется install_hysteria.sh + /opt/vpn-site/app.py
 # НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ. Авторизация юзеров — через HTTP-колбэк на Flask.
 
 listen: :$PORT
@@ -111,7 +111,7 @@ chmod 600 "$CONFIG"
 echo "[5/7] Настраиваю systemd..."
 cat > /etc/systemd/system/hysteria-server.service <<'UNIT'
 [Unit]
-Description=Hysteria 2 Server (BYPASS)
+Description=Hysteria 2 Server (WIREX)
 After=network-online.target
 Wants=network-online.target
 

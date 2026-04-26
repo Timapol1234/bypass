@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://109.248.162.180:8080/api/$1"
+      "destination": "https://api.wirex.online/api/$1"
     },
     {
       "source": "/(.*)",

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Одноразовая миграция: включает Xray Stats API на всех 4 серверах BYPASS.
+Одноразовая миграция: включает Xray Stats API на всех 4 серверах WIREX.
 
 Запускать на NL-сервере: python3 scripts/migrate_xray_stats.py
 

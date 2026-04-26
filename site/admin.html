@@ -3,96 +3,320 @@
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>BYPASS — Admin</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>WIREX — Admin</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=4">
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  // WIREX design system — see .stitch/DESIGN.md
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          background:                "#000000",
+          surface:                   "#000000",
+          "surface-container-low":   "#070707",
+          "surface-container":       "#0A0A0A",
+          "surface-container-high":  "#111111",
+          "surface-container-highest":"#161616",
+          outline:                   "#2A2A2A",
+          "outline-variant":         "#1A1A1A",
+          "on-background":           "#F0F0F0",
+          "on-surface":              "#F0F0F0",
+          "on-surface-variant":      "#8A8A8A",
+          primary:                   "#F5F5F5",
+          "primary-dim":             "#CCCCCC",
+          "on-primary":              "#000000",
+          success:                   "#00E78B",
+          warning:                   "#FFB020",
+          error:                     "#FF4757",
+        },
+        borderRadius: {
+          DEFAULT: "0.25rem",
+          lg: "0.5rem",
+          xl: "0.75rem",
+          "2xl": "1rem",
+          full: "9999px",
+        },
+        fontFamily: {
+          headline: ["Space Grotesk", "system-ui", "sans-serif"],
+          body:     ["Inter", "system-ui", "sans-serif"],
+          mono:     ["JetBrains Mono", "ui-monospace", "monospace"],
+        },
+      },
+    },
+  }
+</script>
 <style>
-  body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #ecedf6; }
-  .font-headline { font-family: 'Space Grotesk', sans-serif; }
-  .primary-gradient { background: linear-gradient(135deg, #8ff5ff 0%, #00eefc 100%); }
-  .hidden { display: none; }
-  .pulse-dot { animation: pulse 2s ease-in-out infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  :root {
+    --wx-bg: #000000;
+    --wx-surface: #0A0A0A;
+    --wx-surface-2: #111111;
+    --wx-border: #2A2A2A;
+    --wx-border-soft: #1A1A1A;
+    --wx-text: #F0F0F0;
+    --wx-text-2: #8A8A8A;
+    --wx-text-3: #4A4A4A;
+    --wx-accent: #F5F5F5;
+    --wx-accent-dim: #CCCCCC;
+    --wx-accent-glow: rgba(245,245,245,.20);
+    --wx-accent-wash: rgba(245,245,245,.06);
+    --wx-success: #00E78B;
+    --wx-warning: #FFB020;
+    --wx-error: #FF4757;
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--wx-bg);
+    color: var(--wx-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image:
+      linear-gradient(rgba(245,245,245,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,245,245,.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-attachment: fixed;
+  }
+  .font-headline { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+  .font-mono     { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .hidden { display: none !important; }
+
+  .wx-card {
+    background: var(--wx-surface);
+    border: 1px solid var(--wx-border-soft);
+    border-radius: 12px;
+  }
+  .wx-card-deep {
+    background: var(--wx-surface-2);
+    border: 1px solid var(--wx-border);
+    border-radius: 12px;
+  }
+
+  .wx-input,
+  input.wx-input,
+  textarea.wx-input,
+  select.wx-input {
+    background: var(--wx-surface) !important;
+    border: 1px solid var(--wx-border);
+    color: var(--wx-text) !important;
+    -webkit-text-fill-color: var(--wx-text) !important;
+    caret-color: var(--wx-accent);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .wx-input:focus {
+    outline: none;
+    border-color: var(--wx-accent);
+    box-shadow: 0 0 0 3px rgba(245,245,245,.10);
+  }
+  .wx-input::placeholder { color: var(--wx-text-3) !important; opacity: 1; }
+
+  .primary-gradient {
+    background: var(--wx-accent);
+    color: #000;
+    border-radius: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    transition: background .15s, box-shadow .15s, transform .1s;
+  }
+  .primary-gradient:hover { background: var(--wx-accent-dim); box-shadow: 0 0 24px var(--wx-accent-glow); }
+  .primary-gradient:active { transform: scale(.98); }
+  .primary-gradient:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+
+  /* Кнопки в строках таблиц / inline action chips */
+  .btn-primary,
+  .btn-danger,
+  .btn-warn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    border: 1px solid;
+    background: transparent;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+    white-space: nowrap;
+  }
+  .btn-primary { color: var(--wx-text); border-color: var(--wx-border); }
+  .btn-primary:hover  { color: #000; background: var(--wx-accent); border-color: var(--wx-accent); }
+  .btn-danger  { color: var(--wx-error); border-color: rgba(255,71,87,.4); }
+  .btn-danger:hover   { background: rgba(255,71,87,.10); border-color: var(--wx-error); }
+  .btn-warn    { color: var(--wx-warning); border-color: rgba(255,176,32,.4); }
+  .btn-warn:hover     { background: rgba(255,176,32,.10); border-color: var(--wx-warning); }
+  .btn-primary:disabled, .btn-danger:disabled, .btn-warn:disabled { opacity:.5; cursor:not-allowed; }
+
+  /* Tab nav — никаких пилюль */
+  .tab-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--wx-text-2);
+    background: transparent;
+    border: 1px solid var(--wx-border-soft);
+    cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .tab-btn:hover { color: var(--wx-text); border-color: var(--wx-border); }
+  .tab-btn.active {
+    color: #000;
+    background: var(--wx-accent);
+    border-color: var(--wx-accent);
+    box-shadow: 0 0 16px var(--wx-accent-glow);
+  }
+
+  /* Status badge — микро-чип, оставляем pill-форму только для них */
+  .badge {
+    display: inline-flex; align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid;
+  }
+  .badge-success { color: var(--wx-success); background: rgba(0,231,139,.08);  border-color: rgba(0,231,139,.3); }
+  .badge-warn    { color: var(--wx-warning); background: rgba(255,176,32,.08); border-color: rgba(255,176,32,.3); }
+  .badge-error   { color: var(--wx-error);   background: rgba(255,71,87,.08);  border-color: rgba(255,71,87,.3); }
+  .badge-muted   { color: var(--wx-text-2);  background: transparent;          border-color: var(--wx-border); }
+
+  /* Таблицы */
   table { border-collapse: collapse; width: 100%; }
-  th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #22262f; font-size: 14px; }
-  th { background: #161a21; color: #a9abb3; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-  tr:hover td { background: #161a21; }
-  .btn-danger { background: rgba(255, 113, 108, 0.15); color: #ff716c; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-  .btn-danger:hover { background: rgba(255, 113, 108, 0.25); }
-  .btn-primary { background: rgba(0, 238, 252, 0.15); color: #00eefc; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-  .btn-primary:hover { background: rgba(0, 238, 252, 0.25); }
-  .btn-warn { background: rgba(250, 204, 21, 0.15); color: #facc15; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-  .btn-warn:hover { background: rgba(250, 204, 21, 0.25); }
-  .tab-btn { padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #a9abb3; background: #22262f; }
-  .tab-btn.active { background: #00eefc; color: #005d63; }
-  .input-admin { background: #22262f; border: 1px solid rgba(69,72,79,0.3); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
-  .input-admin:focus { outline: none; border-color: #00eefc; }
-  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
-  .badge-green { background: rgba(34,197,94,0.15); color: #4ade80; }
-  .badge-yellow { background: rgba(250,204,21,0.15); color: #facc15; }
-  .badge-red { background: rgba(255,113,108,0.15); color: #ff716c; }
-  .badge-gray { background: rgba(169,171,179,0.15); color: #a9abb3; }
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--wx-border-soft);
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  th {
+    background: transparent;
+    color: var(--wx-text-2);
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    border-bottom-color: var(--wx-border);
+  }
+  tbody tr { transition: background .1s; }
+  tbody tr:hover td { background: rgba(245,245,245,.02); }
+
+  /* Pulsing dot для online-статуса */
+  .pulse-dot { animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+  /* Custom checkbox */
+  .wx-check {
+    appearance: none; -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--wx-border);
+    border-radius: 4px;
+    background: var(--wx-surface);
+    cursor: pointer;
+    position: relative;
+    transition: border-color .15s, background .15s, box-shadow .15s;
+    flex-shrink: 0;
+  }
+  .wx-check:hover { border-color: #4A4A4A; }
+  .wx-check:checked { background: var(--wx-accent); border-color: var(--wx-accent); }
+  .wx-check:checked::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'><path d='M3.5 8.5l3 3 6-6.5' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 14px 14px;
+  }
+
+  ::selection { background: var(--wx-accent); color: #000; }
+
+  /* Toast */
+  .wx-toast {
+    background: var(--wx-surface-2);
+    color: var(--wx-text);
+    border: 1px solid var(--wx-border);
+    border-left: 3px solid var(--wx-success);
+    padding: 12px 18px;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.6);
+    font-size: 13px;
+    font-weight: 500;
+  }
 </style>
 </head>
-<body class="bg-[#0b0e14]">
+<body>
 
 <!-- LOGIN -->
 <section id="login-section" class="min-h-screen flex items-center justify-center p-6">
-  <div class="w-full max-w-md bg-[#161a21] p-8 rounded-2xl">
-    <div class="flex items-center gap-2 mb-8 justify-center">
-      <span class="material-symbols-outlined text-[#00eefc] text-3xl">admin_panel_settings</span>
-      <span class="text-2xl font-bold tracking-tighter italic font-['Space_Grotesk']">bypass / admin</span>
+  <div class="w-full max-w-md">
+    <div class="flex flex-col items-center mb-8">
+      <img src="/static/logo.svg" alt="WIREX" class="h-16 w-16 rounded-xl mb-4">
+      <div class="text-[10px] text-on-surface-variant uppercase tracking-[0.2em] mb-2">Control center</div>
+      <h1 class="font-headline text-3xl font-bold tracking-tight">WIR<span class="text-primary">Σ</span>X · Admin</h1>
     </div>
-    <label class="text-xs text-[#a9abb3] font-semibold uppercase tracking-wider">Пароль админа</label>
-    <input id="admin-password" type="password" autofocus class="w-full mt-2 bg-[#22262f] border border-[#45484f]/30 rounded-xl px-4 py-3 focus:outline-none focus:border-[#00eefc]">
-    <div id="login-error" class="text-[#ff716c] text-sm mt-3 hidden"></div>
-    <button id="login-btn" class="primary-gradient text-[#005d63] py-3 rounded-full font-bold w-full mt-5 active:scale-95 transition-all">Войти</button>
+    <div class="wx-card p-7">
+      <label class="block text-[10px] text-on-surface-variant font-semibold uppercase tracking-[0.12em] mb-2">Пароль администратора</label>
+      <input id="admin-password" type="password" autofocus class="wx-input w-full font-mono">
+      <div id="login-error" class="text-error text-xs mt-3 hidden"></div>
+      <button id="login-btn" class="primary-gradient w-full mt-5 py-3.5 text-sm">Войти</button>
+    </div>
   </div>
 </section>
 
 <!-- DASHBOARD -->
 <section id="dashboard" class="hidden">
-  <nav class="sticky top-0 z-10 bg-[#0b0e14]/90 backdrop-blur-xl border-b border-[#22262f]">
-    <div class="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-      <div class="flex items-center gap-2">
-        <span class="material-symbols-outlined text-[#00eefc]">admin_panel_settings</span>
-        <span class="text-xl font-bold tracking-tighter italic font-['Space_Grotesk']">bypass / admin</span>
+  <nav class="sticky top-0 z-10 bg-black/80 backdrop-blur-xl border-b border-outline-variant">
+    <div class="flex items-center justify-between gap-3 px-5 py-3 max-w-7xl mx-auto">
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <img src="/static/logo.svg" alt="WIREX" class="h-7 w-7 rounded">
+        <span class="font-headline text-[18px] leading-none font-bold tracking-wide">WIR<span class="text-primary">Σ</span>X</span>
+        <span class="badge badge-muted ml-1">Admin</span>
       </div>
-      <div class="flex items-center gap-3 text-sm">
-        <span id="last-refresh" class="text-[#a9abb3]"></span>
-        <button id="refresh-btn" class="bg-[#22262f] px-3 py-1.5 rounded-full text-xs flex items-center gap-1">
-          <span class="material-symbols-outlined text-sm">refresh</span> Обновить
+      <div class="flex items-center gap-2 text-xs">
+        <span id="last-refresh" class="text-on-surface-variant hidden md:inline"></span>
+        <button id="refresh-btn" class="btn-primary">
+          <span class="material-symbols-outlined" style="font-size:14px">refresh</span> Обновить
         </button>
-        <button id="logout-btn" class="bg-[#22262f] px-3 py-1.5 rounded-full text-xs">Выйти</button>
+        <button id="logout-btn" class="btn-primary">Выйти</button>
       </div>
     </div>
   </nav>
 
-  <main class="max-w-7xl mx-auto px-6 py-8">
+  <main class="max-w-7xl mx-auto px-5 py-8">
     <!-- KPI cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-      <div class="bg-[#161a21] p-6 rounded-2xl">
-        <div class="text-[#a9abb3] text-xs uppercase tracking-wider">Всего пользователей</div>
-        <div id="kpi-total" class="text-4xl font-bold font-['Space_Grotesk'] mt-2">—</div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-7">
+      <div class="wx-card p-5">
+        <div class="text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-2">Всего пользователей</div>
+        <div id="kpi-total" class="text-3xl font-headline font-bold">—</div>
       </div>
-      <div class="bg-[#161a21] p-6 rounded-2xl">
-        <div class="text-[#a9abb3] text-xs uppercase tracking-wider">Online сейчас</div>
-        <div class="flex items-center gap-3 mt-2">
-          <span class="w-2 h-2 rounded-full bg-green-400 pulse-dot"></span>
-          <div id="kpi-online" class="text-4xl font-bold font-['Space_Grotesk']">—</div>
+      <div class="wx-card p-5">
+        <div class="text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-2">Online сейчас</div>
+        <div class="flex items-center gap-2.5">
+          <span class="w-2 h-2 rounded-full bg-success pulse-dot"></span>
+          <div id="kpi-online" class="text-3xl font-headline font-bold">—</div>
         </div>
       </div>
-      <div class="bg-[#161a21] p-6 rounded-2xl">
-        <div class="text-[#a9abb3] text-xs uppercase tracking-wider">Общий трафик</div>
-        <div id="kpi-traffic" class="text-4xl font-bold font-['Space_Grotesk'] mt-2">—</div>
+      <div class="wx-card p-5">
+        <div class="text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-2">Общий трафик</div>
+        <div id="kpi-traffic" class="text-3xl font-headline font-bold">—</div>
       </div>
     </div>
 
     <!-- TABS -->
-    <div class="flex flex-wrap gap-2 mb-6">
+    <div class="flex flex-wrap gap-2 mb-5">
       <button class="tab-btn active" data-tab="users">Пользователи</button>
-      <button class="tab-btn" data-tab="payments">Платежи <span id="payments-badge" class="ml-1 text-[10px] opacity-80"></span></button>
+      <button class="tab-btn" data-tab="payments">Платежи <span id="payments-badge" class="ml-1 text-[9px] opacity-80"></span></button>
       <button class="tab-btn" data-tab="subs">Подписки</button>
       <button class="tab-btn" data-tab="promos">Промокоды</button>
       <button class="tab-btn" data-tab="servers">Серверы</button>
@@ -101,10 +325,10 @@
     </div>
 
     <!-- USERS TABLE -->
-    <div id="tab-users" class="tab-panel bg-[#161a21] rounded-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-[#22262f]">
-        <h2 class="font-headline text-xl font-bold">Пользователи</h2>
-        <input id="search" placeholder="Поиск по имени/email..." class="bg-[#22262f] px-3 py-1.5 rounded-full text-sm w-64 focus:outline-none focus:ring-1 focus:ring-[#00eefc]/40">
+    <div id="tab-users" class="tab-panel wx-card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-outline-variant gap-3 flex-wrap">
+        <h2 class="font-headline text-lg font-bold">Пользователи</h2>
+        <input id="search" placeholder="Поиск по имени/email…" class="wx-input w-64 max-w-full text-xs">
       </div>
       <div class="overflow-x-auto">
         <table>
@@ -122,17 +346,17 @@
             </tr>
           </thead>
           <tbody id="users-body">
-            <tr><td colspan="9" class="text-center text-[#a9abb3] py-10">Загрузка...</td></tr>
+            <tr><td colspan="9" class="text-center text-on-surface-variant py-10">Загрузка…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
     <!-- PAYMENTS -->
-    <div id="tab-payments" class="tab-panel hidden bg-[#161a21] rounded-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-[#22262f]">
-        <h2 class="font-headline text-xl font-bold">Заявки на оплату</h2>
-        <select id="payments-filter" class="input-admin">
+    <div id="tab-payments" class="tab-panel hidden wx-card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-outline-variant gap-3 flex-wrap">
+        <h2 class="font-headline text-lg font-bold">Заявки на оплату</h2>
+        <select id="payments-filter" class="wx-input text-xs w-56">
           <option value="pending">В ожидании</option>
           <option value="approved">Подтверждённые</option>
           <option value="rejected">Отклонённые</option>
@@ -152,7 +376,7 @@
             </tr>
           </thead>
           <tbody id="payments-body">
-            <tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Загрузка...</td></tr>
+            <tr><td colspan="6" class="text-center text-on-surface-variant py-10">Загрузка…</td></tr>
           </tbody>
         </table>
       </div>
@@ -160,38 +384,38 @@
 
     <!-- SUBSCRIPTIONS -->
     <div id="tab-subs" class="tab-panel hidden">
-      <div class="bg-[#161a21] rounded-2xl p-6 mb-6">
-        <h3 class="font-headline text-lg font-bold mb-4">Быстрые действия</h3>
+      <div class="wx-card p-5 mb-5">
+        <h3 class="font-headline text-base font-bold mb-4">Быстрые действия</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="text-xs text-[#a9abb3] font-semibold uppercase tracking-wider">Продлить на N дней</label>
-            <div class="flex gap-2 mt-2">
-              <input id="quick-ext-email" placeholder="email" class="input-admin flex-1">
-              <input id="quick-ext-days" type="number" placeholder="30" class="input-admin w-20">
+            <label class="block text-[10px] text-on-surface-variant font-semibold uppercase tracking-[0.12em] mb-2">Продлить на N дней</label>
+            <div class="flex gap-2">
+              <input id="quick-ext-email" placeholder="email" class="wx-input flex-1 text-xs">
+              <input id="quick-ext-days" type="number" placeholder="30" class="wx-input w-20 text-xs">
               <button id="quick-ext-btn" class="btn-primary">OK</button>
             </div>
           </div>
           <div>
-            <label class="text-xs text-[#a9abb3] font-semibold uppercase tracking-wider">Выдать безлимит</label>
-            <div class="flex gap-2 mt-2">
-              <input id="quick-unl-email" placeholder="email" class="input-admin flex-1">
+            <label class="block text-[10px] text-on-surface-variant font-semibold uppercase tracking-[0.12em] mb-2">Выдать безлимит</label>
+            <div class="flex gap-2">
+              <input id="quick-unl-email" placeholder="email" class="wx-input flex-1 text-xs">
               <button id="quick-unl-btn" class="btn-primary">Вкл</button>
               <button id="quick-unl-off-btn" class="btn-warn">Выкл</button>
             </div>
           </div>
           <div>
-            <label class="text-xs text-[#a9abb3] font-semibold uppercase tracking-wider">Удалить подписку</label>
-            <div class="flex gap-2 mt-2">
-              <input id="quick-rev-email" placeholder="email" class="input-admin flex-1">
+            <label class="block text-[10px] text-on-surface-variant font-semibold uppercase tracking-[0.12em] mb-2">Удалить подписку</label>
+            <div class="flex gap-2">
+              <input id="quick-rev-email" placeholder="email" class="wx-input flex-1 text-xs">
               <button id="quick-rev-btn" class="btn-danger">Удалить</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="bg-[#161a21] rounded-2xl overflow-hidden">
-        <div class="px-6 py-4 border-b border-[#22262f]">
-          <h2 class="font-headline text-xl font-bold">Активные подписки</h2>
+      <div class="wx-card overflow-hidden">
+        <div class="px-5 py-4 border-b border-outline-variant">
+          <h2 class="font-headline text-lg font-bold">Активные подписки</h2>
         </div>
         <div class="overflow-x-auto">
           <table>
@@ -206,7 +430,7 @@
               </tr>
             </thead>
             <tbody id="subs-body">
-              <tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Загрузка...</td></tr>
+              <tr><td colspan="6" class="text-center text-on-surface-variant py-10">Загрузка…</td></tr>
             </tbody>
           </table>
         </div>
@@ -215,26 +439,26 @@
 
     <!-- PROMO CODES -->
     <div id="tab-promos" class="tab-panel hidden">
-      <div class="bg-[#161a21] rounded-2xl p-6 mb-6">
-        <h3 class="font-headline text-lg font-bold mb-4">Создать промокод</h3>
+      <div class="wx-card p-5 mb-5">
+        <h3 class="font-headline text-base font-bold mb-4">Создать промокод</h3>
         <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-          <input id="promo-code" placeholder="BYPASS99" class="input-admin uppercase">
-          <input id="promo-days" type="number" placeholder="Дней (30)" class="input-admin">
-          <input id="promo-max" type="number" placeholder="Лимит (0=∞)" class="input-admin">
-          <input id="promo-expires" type="number" placeholder="Истекает через дн." class="input-admin">
+          <input id="promo-code" placeholder="WIREX99" class="wx-input uppercase text-xs font-mono">
+          <input id="promo-days" type="number" placeholder="Дней (30)" class="wx-input text-xs">
+          <input id="promo-max" type="number" placeholder="Лимит (0=∞)" class="wx-input text-xs">
+          <input id="promo-expires" type="number" placeholder="Истекает через дн." class="wx-input text-xs">
           <div class="flex items-center gap-2">
-            <label class="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" id="promo-unlimited" class="w-4 h-4"> Безлимит
+            <label class="flex items-center gap-2 text-xs cursor-pointer">
+              <input type="checkbox" id="promo-unlimited" class="wx-check"> Безлимит
             </label>
             <button id="promo-create-btn" class="btn-primary ml-auto">Создать</button>
           </div>
         </div>
-        <div id="promo-error" class="text-[#ff716c] text-sm mt-3 hidden"></div>
+        <div id="promo-error" class="text-error text-xs mt-3 hidden"></div>
       </div>
 
-      <div class="bg-[#161a21] rounded-2xl overflow-hidden">
-        <div class="px-6 py-4 border-b border-[#22262f]">
-          <h2 class="font-headline text-xl font-bold">Промокоды</h2>
+      <div class="wx-card overflow-hidden">
+        <div class="px-5 py-4 border-b border-outline-variant">
+          <h2 class="font-headline text-lg font-bold">Промокоды</h2>
         </div>
         <div class="overflow-x-auto">
           <table>
@@ -249,7 +473,7 @@
               </tr>
             </thead>
             <tbody id="promos-body">
-              <tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Загрузка...</td></tr>
+              <tr><td colspan="6" class="text-center text-on-surface-variant py-10">Загрузка…</td></tr>
             </tbody>
           </table>
         </div>
@@ -258,10 +482,10 @@
 
     <!-- SERVERS -->
     <div id="tab-servers" class="tab-panel hidden">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <div>
-          <h2 class="font-headline text-xl font-bold">Серверы</h2>
-          <div id="servers-meta" class="text-xs text-[#a9abb3] mt-1">—</div>
+          <h2 class="font-headline text-lg font-bold">Серверы</h2>
+          <div id="servers-meta" class="text-[11px] text-on-surface-variant mt-1">—</div>
         </div>
         <div class="flex gap-2">
           <button id="servers-refresh-btn" class="btn-primary">Обновить метрики</button>
@@ -270,110 +494,111 @@
       </div>
 
       <!-- Форма добавления сервера -->
-      <div id="server-add-form" class="hidden bg-[#0b0e14] border border-[#22262f] rounded-2xl p-4 mb-6">
+      <div id="server-add-form" class="hidden wx-card-deep p-5 mb-6">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="font-headline font-semibold">Добавить сервер</h3>
-          <button id="server-add-close" class="text-[#a9abb3] hover:text-white text-sm">✕</button>
+          <h3 class="font-headline font-semibold text-base">Добавить сервер</h3>
+          <button id="server-add-close" class="text-on-surface-variant hover:text-on-surface text-sm">✕</button>
         </div>
-        <div class="text-xs text-[#a9abb3] mb-3">
-          SSH-ключ Амстердама должен быть уже прописан в <code>~/.ssh/authorized_keys</code> на новом сервере.
-          Flask подключится, поставит xray+hysteria и добавит сервер в пул.
+        <div class="text-xs text-on-surface-variant mb-4 leading-relaxed">
+          SSH-ключ Амстердама должен быть уже прописан в <code class="font-mono text-primary">~/.ssh/authorized_keys</code> на новом сервере.
+          Flask подключится, поставит xray + hysteria и добавит сервер в пул.
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <label class="block">
-            <span class="text-[#a9abb3] text-xs">IP</span>
-            <input id="srv-ip" type="text" placeholder="1.2.3.4" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white font-mono">
+            <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1.5">IP</span>
+            <input id="srv-ip" type="text" placeholder="1.2.3.4" class="wx-input w-full font-mono text-xs">
           </label>
           <label class="block">
-            <span class="text-[#a9abb3] text-xs">SSH user</span>
-            <input id="srv-user" type="text" value="root" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white font-mono">
+            <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1.5">SSH user</span>
+            <input id="srv-user" type="text" value="root" class="wx-input w-full font-mono text-xs">
           </label>
           <label class="block md:col-span-2">
-            <span class="text-[#a9abb3] text-xs">Страна <span id="srv-flag-preview" class="ml-1"></span></span>
-            <input id="srv-country-search" list="srv-country-list" type="text" placeholder="Начните вводить: Германия / DE / Germany" autocomplete="off" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white">
+            <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1.5">Страна <span id="srv-flag-preview" class="ml-1 text-base"></span></span>
+            <input id="srv-country-search" list="srv-country-list" type="text" placeholder="Начните вводить: Германия / DE / Germany" autocomplete="off" class="wx-input w-full text-xs">
             <datalist id="srv-country-list"></datalist>
             <input id="srv-country" type="hidden">
             <input id="srv-flag" type="hidden">
           </label>
           <label class="block md:col-span-2">
-            <span class="text-[#a9abb3] text-xs">Название для UI (по умолчанию из страны)</span>
-            <input id="srv-name" type="text" placeholder="Германия" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white">
+            <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1.5">Название для UI <span class="normal-case tracking-normal text-on-surface-variant/70">(по умолчанию из страны)</span></span>
+            <input id="srv-name" type="text" placeholder="Германия" class="wx-input w-full text-xs">
           </label>
           <label class="block">
-            <span class="text-[#a9abb3] text-xs">Bandwidth Мбит/с</span>
-            <input id="srv-bw" type="number" value="50" min="10" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white font-mono">
+            <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1.5">Bandwidth Мбит/с</span>
+            <input id="srv-bw" type="number" value="50" min="10" class="wx-input w-full font-mono text-xs">
           </label>
           <label class="block md:col-span-2">
-            <span class="text-[#a9abb3] text-xs">Резервный для (опционально) — если этот сервер сдохнет, юзеров автоматически перебросят на выбранный</span>
-            <select id="srv-backup-for" class="w-full mt-1 px-3 py-2 rounded-lg bg-[#161a21] text-white">
+            <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1.5">Резервный для (опц.)</span>
+            <select id="srv-backup-for" class="wx-input w-full text-xs">
               <option value="">— не резерв —</option>
             </select>
+            <span class="block text-[10px] text-on-surface-variant mt-1.5">Если этот сервер упадёт — юзеров перебросят на выбранный.</span>
           </label>
         </div>
-        <div class="mt-3 flex items-center gap-3">
+        <div class="mt-4 flex items-center gap-3 flex-wrap">
           <button id="server-add-submit" class="btn-primary">Установить и добавить</button>
-          <div id="server-add-status" class="text-xs text-[#a9abb3]"></div>
+          <div id="server-add-status" class="text-xs text-on-surface-variant"></div>
         </div>
       </div>
 
       <!-- Failover статус -->
-      <h3 class="font-headline font-semibold mb-3">Failover &amp; health-check</h3>
-      <div id="failover-status" class="bg-[#0b0e14] border border-[#22262f] rounded-lg p-3 mb-6 text-sm">
-        <div class="text-[#a9abb3]">Загружаю...</div>
+      <h3 class="font-headline font-semibold text-sm uppercase tracking-[0.12em] text-on-surface-variant mb-3">Failover &amp; health-check</h3>
+      <div id="failover-status" class="wx-card-deep p-4 mb-7 text-sm">
+        <div class="text-on-surface-variant">Загружаю…</div>
       </div>
 
-      <!-- Список всех серверов с editable полями -->
-      <h3 class="font-headline font-semibold mb-3">Пул серверов</h3>
-      <div id="servers-manage" class="grid grid-cols-1 gap-2 mb-6">
-        <div class="text-[#a9abb3] text-sm">Загружаю...</div>
+      <!-- Список всех серверов -->
+      <h3 class="font-headline font-semibold text-sm uppercase tracking-[0.12em] text-on-surface-variant mb-3">Пул серверов</h3>
+      <div id="servers-manage" class="grid grid-cols-1 gap-2 mb-7">
+        <div class="text-on-surface-variant text-sm">Загружаю…</div>
       </div>
 
-      <!-- Живые метрики (xray/hy2 статус, load, RAM) -->
-      <h3 class="font-headline font-semibold mb-3">Метрики по SSH</h3>
+      <!-- Живые метрики -->
+      <h3 class="font-headline font-semibold text-sm uppercase tracking-[0.12em] text-on-surface-variant mb-3">Метрики по SSH</h3>
       <div id="servers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="text-[#a9abb3] text-sm">Нажмите «Обновить метрики».</div>
+        <div class="text-on-surface-variant text-sm">Нажмите «Обновить метрики».</div>
       </div>
     </div>
 
     <!-- ALERTS -->
     <div id="tab-alerts" class="tab-panel hidden">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <div>
-          <h2 class="font-headline text-xl font-bold">Алерты</h2>
-          <div id="alerts-meta" class="text-xs text-[#a9abb3] mt-1">—</div>
+          <h2 class="font-headline text-lg font-bold">Алерты</h2>
+          <div id="alerts-meta" class="text-[11px] text-on-surface-variant mt-1">—</div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <button id="alerts-refresh-btn" class="btn-primary">Обновить</button>
           <button id="alerts-run-btn" class="btn-primary">Проверить сейчас</button>
           <button id="alerts-test-btn" class="btn-primary">Тестовое письмо</button>
         </div>
       </div>
-      <div id="alerts-email-warn" class="hidden bg-[#3a1f25] text-[#ff9aa7] rounded-lg p-3 text-sm mb-4"></div>
-      <h3 class="font-headline font-semibold mb-2">Текущее состояние</h3>
-      <div id="alerts-current" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-        <div class="text-[#a9abb3] text-sm">Нажмите «Обновить».</div>
+      <div id="alerts-email-warn" class="hidden wx-card-deep border-l-2 border-error p-3 text-sm text-error mb-5"></div>
+      <h3 class="font-headline font-semibold text-sm uppercase tracking-[0.12em] text-on-surface-variant mb-3">Текущее состояние</h3>
+      <div id="alerts-current" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-7">
+        <div class="text-on-surface-variant text-sm">Нажмите «Обновить».</div>
       </div>
-      <h3 class="font-headline font-semibold mb-2">Последние события</h3>
-      <div id="alerts-log" class="bg-[#161a21] rounded-2xl border border-[#22262f] divide-y divide-[#22262f]">
-        <div class="p-4 text-[#a9abb3] text-sm">—</div>
+      <h3 class="font-headline font-semibold text-sm uppercase tracking-[0.12em] text-on-surface-variant mb-3">Последние события</h3>
+      <div id="alerts-log" class="wx-card divide-y divide-outline-variant">
+        <div class="p-4 text-on-surface-variant text-sm">—</div>
       </div>
     </div>
 
     <!-- BACKUPS -->
     <div id="tab-backups" class="tab-panel hidden">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <div>
-          <h2 class="font-headline text-xl font-bold">Бэкапы</h2>
-          <div id="backups-meta" class="text-xs text-[#a9abb3] mt-1">JSON + Xray-конфиги со всех серверов. Cron: каждый день 04:00 UTC. Хранение 30 дней.</div>
+          <h2 class="font-headline text-lg font-bold">Бэкапы</h2>
+          <div id="backups-meta" class="text-[11px] text-on-surface-variant mt-1">JSON + Xray-конфиги со всех серверов. Cron: каждый день 04:00 UTC. Хранение 30 дней.</div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <button id="backups-refresh-btn" class="btn-primary">Обновить</button>
           <button id="backup-now-btn" class="btn-primary">Сделать бэкап сейчас</button>
         </div>
       </div>
-      <div id="backup-log" class="hidden bg-[#0b0e14] rounded-lg p-3 text-xs font-mono text-[#a9abb3] mb-4 whitespace-pre-wrap max-h-48 overflow-auto"></div>
-      <div id="backups-list" class="bg-[#161a21] rounded-2xl border border-[#22262f] divide-y divide-[#22262f]">
-        <div class="p-4 text-[#a9abb3] text-sm">Нажмите «Обновить», чтобы увидеть список.</div>
+      <div id="backup-log" class="hidden wx-card-deep p-3 text-xs font-mono text-on-surface-variant mb-4 whitespace-pre-wrap max-h-48 overflow-auto"></div>
+      <div id="backups-list" class="wx-card divide-y divide-outline-variant">
+        <div class="p-4 text-on-surface-variant text-sm">Нажмите «Обновить», чтобы увидеть список.</div>
       </div>
     </div>
 
@@ -381,7 +606,7 @@
 </section>
 
 <script>
-const API_URL = 'http://109.248.162.180:8080';
+const API_URL = 'https://api.wirex.online';
 let adminPass = sessionStorage.getItem('admin_pass') || '';
 let refreshTimer = null;
 let allUsers = [];
@@ -454,26 +679,26 @@ function renderPayments(data) {
   badge.textContent = pending ? `(${pending})` : '';
   const body = document.getElementById('payments-body');
   if (!items.length) {
-    body.innerHTML = '<tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Нет заявок</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" class="text-center text-on-surface-variant py-10">Нет заявок</td></tr>';
     return;
   }
   body.innerHTML = items.map(r => {
     const tariffLabel = tariffs[r.tariff]?.label || r.tariff;
     const statusBadge = r.status === 'pending'
-      ? '<span class="badge badge-yellow">ожидает</span>'
+      ? '<span class="badge badge-warn">ожидает</span>'
       : r.status === 'approved'
-        ? '<span class="badge badge-green">оплачено</span>'
-        : '<span class="badge badge-red">отклонено</span>';
+        ? '<span class="badge badge-success">оплачено</span>'
+        : '<span class="badge badge-error">отклонено</span>';
     const actions = r.status === 'pending'
       ? `<button class="btn-primary" data-approve="${r.id}">✓ Подтвердить</button>
          <button class="btn-danger ml-2" data-reject="${r.id}">Отклонить</button>`
-      : `<span class="text-[#a9abb3] text-xs">${fmtDate(r.resolved_at)}</span>`;
+      : `<span class="text-on-surface-variant text-xs">${fmtDate(r.resolved_at)}</span>`;
     return `
       <tr>
         <td class="font-semibold">${escapeHtml(r.email)}</td>
         <td>${escapeHtml(tariffLabel)} (${r.days}д)</td>
         <td class="font-mono">${r.price}₽</td>
-        <td class="text-[#a9abb3] text-xs">${fmtDate(r.created)}</td>
+        <td class="text-on-surface-variant text-xs">${fmtDate(r.created)}</td>
         <td>${statusBadge}</td>
         <td>${actions}</td>
       </tr>`;
@@ -503,21 +728,21 @@ async function rejectPayment(id) {
 function renderSubs(items) {
   const body = document.getElementById('subs-body');
   if (!items.length) {
-    body.innerHTML = '<tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Нет подписок</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" class="text-center text-on-surface-variant py-10">Нет подписок</td></tr>';
     return;
   }
   body.innerHTML = items.map(s => {
     const typeLabel = s.plan === 'unlimited' ? '∞ безлимит' : 'платная';
     const statusBadge = s.active
-      ? '<span class="badge badge-green">активна</span>'
-      : '<span class="badge badge-gray">истекла</span>';
+      ? '<span class="badge badge-success">активна</span>'
+      : '<span class="badge badge-muted">истекла</span>';
     const exp = s.plan === 'unlimited' ? '—' : fmtDate(s.expires_at);
     return `
       <tr>
         <td class="font-semibold">${escapeHtml(s.email)}</td>
         <td>${typeLabel}</td>
-        <td class="text-[#a9abb3] text-xs">${exp}</td>
-        <td class="text-[#a9abb3] text-xs">${fmtDate(s.updated)}</td>
+        <td class="text-on-surface-variant text-xs">${exp}</td>
+        <td class="text-on-surface-variant text-xs">${fmtDate(s.updated)}</td>
         <td>${statusBadge}</td>
         <td>
           <button class="btn-primary" data-ext="${escapeHtml(s.email)}">+30д</button>
@@ -555,7 +780,7 @@ async function quickRevoke(email) {
 function renderPromos(items) {
   const body = document.getElementById('promos-body');
   if (!items.length) {
-    body.innerHTML = '<tr><td colspan="6" class="text-center text-[#a9abb3] py-10">Промокодов нет</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" class="text-center text-on-surface-variant py-10">Промокодов нет</td></tr>';
     return;
   }
   body.innerHTML = items.map(p => {
@@ -566,8 +791,8 @@ function renderPromos(items) {
         <td class="font-mono font-bold">${escapeHtml(p.code)}</td>
         <td>${bonus}</td>
         <td>${usage}</td>
-        <td class="text-[#a9abb3] text-xs">${p.expires_at ? fmtDate(p.expires_at) : '—'}</td>
-        <td class="text-[#a9abb3] text-xs">${fmtDate(p.created)}</td>
+        <td class="text-on-surface-variant text-xs">${p.expires_at ? fmtDate(p.expires_at) : '—'}</td>
+        <td class="text-on-surface-variant text-xs">${fmtDate(p.created)}</td>
         <td><button class="btn-danger" data-del="${escapeHtml(p.code)}">Удалить</button></td>
       </tr>`;
   }).join('');
@@ -609,7 +834,7 @@ async function deletePromo(code) {
 
 function showToast(msg) {
   const el = document.createElement('div');
-  el.className = 'fixed bottom-6 right-6 bg-[#00eefc] text-[#005d63] px-4 py-2 rounded-xl font-semibold z-50';
+  el.className = 'fixed bottom-6 right-6 wx-toast z-50';
   el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 2000);
@@ -634,24 +859,24 @@ function renderUsers() {
 
   const body = document.getElementById('users-body');
   if (!filtered.length) {
-    body.innerHTML = '<tr><td colspan="9" class="text-center text-[#a9abb3] py-10">Нет пользователей</td></tr>';
+    body.innerHTML = '<tr><td colspan="9" class="text-center text-on-surface-variant py-10">Нет пользователей</td></tr>';
     return;
   }
 
   body.innerHTML = filtered.map(u => `
     <tr>
       <td>
-        <span class="inline-flex items-center gap-1.5 text-xs font-semibold ${u.online ? 'text-green-400' : 'text-[#a9abb3]'}">
-          <span class="w-2 h-2 rounded-full ${u.online ? 'bg-green-400 pulse-dot' : 'bg-[#45484f]'}"></span>
+        <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${u.online ? 'text-success' : 'text-on-surface-variant'}">
+          <span class="w-2 h-2 rounded-full ${u.online ? 'bg-success pulse-dot' : 'bg-outline'}"></span>
           ${u.online ? 'online' : 'offline'}
         </span>
       </td>
       <td class="font-semibold">${escapeHtml(u.username)}</td>
-      <td class="text-[#a9abb3]">${escapeHtml(u.email || '—')}</td>
+      <td class="text-on-surface-variant">${escapeHtml(u.email || '—')}</td>
       <td>${u.server_flag || ''} ${escapeHtml(u.server_name || u.server)}</td>
-      <td class="text-[#a9abb3] text-xs">${fmtDate(u.created)}</td>
-      <td class="text-[#00eefc] font-mono">${fmtBytes(u.traffic_up)}</td>
-      <td class="text-[#ac89ff] font-mono">${fmtBytes(u.traffic_down)}</td>
+      <td class="text-on-surface-variant text-xs">${fmtDate(u.created)}</td>
+      <td class="font-mono">${fmtBytes(u.traffic_up)}</td>
+      <td class="font-mono">${fmtBytes(u.traffic_down)}</td>
       <td class="font-mono font-semibold">${fmtBytes(u.traffic_up + u.traffic_down)}</td>
       <td><button class="btn-danger" data-del="${escapeHtml(u.username)}">Удалить</button></td>
     </tr>
@@ -729,11 +954,11 @@ function fmtUptime(sec) {
 }
 
 function loadColor(load1m, cpu) {
-  if (!cpu || load1m == null) return '#a9abb3';
+  if (!cpu || load1m == null) return 'var(--wx-text-2)';
   const ratio = load1m / cpu;
-  if (ratio < 0.6) return '#00eefc';
-  if (ratio < 1.0) return '#ffd166';
-  return '#ff716c';
+  if (ratio < 0.6) return 'var(--wx-success)';
+  if (ratio < 1.0) return 'var(--wx-warning)';
+  return 'var(--wx-error)';
 }
 
 function renderServers(servers, meta) {
@@ -744,65 +969,65 @@ function renderServers(servers, meta) {
     metaEl.textContent = `Обновлено в ${when} · ${meta.cached ? 'из кеша' : 'свежо'} · TTL ${meta.cache_ttl}с`;
   }
   if (!servers.length) {
-    grid.innerHTML = '<div class="text-[#a9abb3]">Серверы не настроены.</div>';
+    grid.innerHTML = '<div class="text-on-surface-variant text-sm">Серверы не настроены.</div>';
     return;
   }
   grid.innerHTML = servers.map(s => {
     const online = s.online;
-    const statusColor = online ? '#00eefc' : '#ff716c';
-    const statusText = online ? 'Онлайн' : `Оффлайн${s.online_reason ? ' · ' + escapeHtml(s.online_reason) : ''}`;
+    const statusClass = online ? 'badge badge-success' : 'badge badge-error';
+    const statusText = online ? 'ONLINE' : `OFFLINE${s.online_reason ? ' · ' + escapeHtml(s.online_reason) : ''}`;
     const memUsedGb = s.mem_used ? (s.mem_used / 1073741824).toFixed(2) : null;
     const memTotalGb = s.mem_total ? (s.mem_total / 1073741824).toFixed(2) : null;
     const memPct = (s.mem_total && s.mem_used) ? Math.round((s.mem_used / s.mem_total) * 100) : null;
-    const xrayStatus = s.xray_active ? '<span class="text-[#00eefc]">active</span>' : (s.xray_active === false ? '<span class="text-[#ff716c]">stopped</span>' : '—');
+    const xrayStatus = s.xray_active ? '<span class="text-success">active</span>' : (s.xray_active === false ? '<span class="text-error">stopped</span>' : '—');
     const hy2Status = s.hysteria_installed === false
-        ? '<span class="text-[#a9abb3]">не установлен</span>'
-        : (s.hysteria_active ? '<span class="text-[#00eefc]">active</span>'
-           : (s.hysteria_active === false ? '<span class="text-[#ff716c]">stopped</span>' : '—'));
+        ? '<span class="text-on-surface-variant">не установлен</span>'
+        : (s.hysteria_active ? '<span class="text-success">active</span>'
+           : (s.hysteria_active === false ? '<span class="text-error">stopped</span>' : '—'));
     return `
-      <div class="bg-[#161a21] rounded-2xl p-5 border border-[#22262f]">
-        <div class="flex items-start justify-between mb-4">
+      <div class="wx-card p-5">
+        <div class="flex items-start justify-between mb-4 gap-3">
           <div>
-            <div class="text-2xl">${s.flag || ''} <span class="font-headline font-bold text-lg align-middle">${escapeHtml(s.name)}</span></div>
-            <div class="text-xs text-[#a9abb3] font-mono mt-1">${escapeHtml(s.ip)}:${s.port}${s.remote ? ' · SSH' : ' · local'}</div>
+            <div class="text-xl">${s.flag || ''} <span class="font-headline font-bold text-base align-middle">${escapeHtml(s.name)}</span></div>
+            <div class="text-[11px] text-on-surface-variant font-mono mt-1">${escapeHtml(s.ip)}:${s.port}${s.remote ? ' · SSH' : ' · local'}</div>
           </div>
-          <div class="text-right">
-            <div class="text-xs font-semibold" style="color:${statusColor}">${statusText}</div>
-            <div class="text-[10px] text-[#a9abb3] mt-1">${s.latency_ms != null ? s.latency_ms + ' мс' : ''}</div>
+          <div class="text-right flex-shrink-0">
+            <span class="${statusClass}">${statusText}</span>
+            <div class="text-[10px] text-on-surface-variant mt-1.5">${s.latency_ms != null ? s.latency_ms + ' мс' : ''}</div>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          <div class="bg-[#0b0e14] rounded-lg p-3">
-            <div class="text-[10px] text-[#a9abb3] uppercase">Ключи</div>
-            <div class="font-semibold text-base" style="color:${s.full ? '#ff716c' : 'inherit'}">${s.users_total}<span class="text-[#a9abb3] font-normal"> / ${s.max_users ?? '?'}</span></div>
-            <div class="text-[10px] text-[#a9abb3]">активных ${s.users_active} · ${s.bandwidth_mbps ? s.bandwidth_mbps + ' Мбит/с' : 'bw n/a'}${s.full ? ' · <span style="color:#ff716c">заполнен</span>' : ''}</div>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          <div class="wx-card-deep p-3">
+            <div class="text-[9px] text-on-surface-variant uppercase tracking-[0.12em]">Ключи</div>
+            <div class="font-semibold text-base mt-1" style="color:${s.full ? 'var(--wx-error)' : 'inherit'}">${s.users_total}<span class="text-on-surface-variant font-normal"> / ${s.max_users ?? '?'}</span></div>
+            <div class="text-[10px] text-on-surface-variant mt-1">активных ${s.users_active} · ${s.bandwidth_mbps ? s.bandwidth_mbps + ' Мбит/с' : 'bw n/a'}${s.full ? ' · <span style="color:var(--wx-error)">заполнен</span>' : ''}</div>
           </div>
-          <div class="bg-[#0b0e14] rounded-lg p-3">
-            <div class="text-[10px] text-[#a9abb3] uppercase">Xray / Hy2</div>
-            <div class="font-semibold text-base">${escapeHtml(s.xray_version || '—')}</div>
+          <div class="wx-card-deep p-3">
+            <div class="text-[9px] text-on-surface-variant uppercase tracking-[0.12em]">Xray / Hy2</div>
+            <div class="font-semibold text-base mt-1">${escapeHtml(s.xray_version || '—')}</div>
             <div class="text-[10px]">Xray: ${xrayStatus}</div>
             <div class="text-[10px]">Hy2: ${hy2Status}</div>
           </div>
-          <div class="bg-[#0b0e14] rounded-lg p-3">
-            <div class="text-[10px] text-[#a9abb3] uppercase">Load avg</div>
-            <div class="font-semibold text-base" style="color:${loadColor(s.load_1m, s.cpu_count)}">${s.load_1m != null ? s.load_1m.toFixed(2) : '—'}</div>
-            <div class="text-[10px] text-[#a9abb3]">5м ${s.load_5m != null ? s.load_5m.toFixed(2) : '—'} · 15м ${s.load_15m != null ? s.load_15m.toFixed(2) : '—'} · ${s.cpu_count || '?'} CPU</div>
+          <div class="wx-card-deep p-3">
+            <div class="text-[9px] text-on-surface-variant uppercase tracking-[0.12em]">Load avg</div>
+            <div class="font-semibold text-base mt-1" style="color:${loadColor(s.load_1m, s.cpu_count)}">${s.load_1m != null ? s.load_1m.toFixed(2) : '—'}</div>
+            <div class="text-[10px] text-on-surface-variant">5м ${s.load_5m != null ? s.load_5m.toFixed(2) : '—'} · 15м ${s.load_15m != null ? s.load_15m.toFixed(2) : '—'} · ${s.cpu_count || '?'} CPU</div>
           </div>
-          <div class="bg-[#0b0e14] rounded-lg p-3">
-            <div class="text-[10px] text-[#a9abb3] uppercase">RAM</div>
-            <div class="font-semibold text-base">${memPct != null ? memPct + '%' : '—'}</div>
-            <div class="text-[10px] text-[#a9abb3]">${memUsedGb || '—'} / ${memTotalGb || '—'} ГБ</div>
+          <div class="wx-card-deep p-3">
+            <div class="text-[9px] text-on-surface-variant uppercase tracking-[0.12em]">RAM</div>
+            <div class="font-semibold text-base mt-1">${memPct != null ? memPct + '%' : '—'}</div>
+            <div class="text-[10px] text-on-surface-variant">${memUsedGb || '—'} / ${memTotalGb || '—'} ГБ</div>
           </div>
-          <div class="bg-[#0b0e14] rounded-lg p-3">
-            <div class="text-[10px] text-[#a9abb3] uppercase">Трафик ↓</div>
-            <div class="font-semibold text-base">${s.net_rx != null ? fmtBytes(s.net_rx) : '—'}</div>
-            <div class="text-[10px] text-[#a9abb3]">с момента запуска</div>
+          <div class="wx-card-deep p-3">
+            <div class="text-[9px] text-on-surface-variant uppercase tracking-[0.12em]">Трафик ↓</div>
+            <div class="font-semibold text-base mt-1">${s.net_rx != null ? fmtBytes(s.net_rx) : '—'}</div>
+            <div class="text-[10px] text-on-surface-variant">с момента запуска</div>
           </div>
-          <div class="bg-[#0b0e14] rounded-lg p-3">
-            <div class="text-[10px] text-[#a9abb3] uppercase">Трафик ↑</div>
-            <div class="font-semibold text-base">${s.net_tx != null ? fmtBytes(s.net_tx) : '—'}</div>
-            <div class="text-[10px] text-[#a9abb3]">uptime ${fmtUptime(s.uptime_sec)}</div>
+          <div class="wx-card-deep p-3">
+            <div class="text-[9px] text-on-surface-variant uppercase tracking-[0.12em]">Трафик ↑</div>
+            <div class="font-semibold text-base mt-1">${s.net_tx != null ? fmtBytes(s.net_tx) : '—'}</div>
+            <div class="text-[10px] text-on-surface-variant">uptime ${fmtUptime(s.uptime_sec)}</div>
           </div>
         </div>
       </div>
@@ -813,8 +1038,8 @@ function renderServers(servers, meta) {
 async function loadServers(forceRefresh) {
   const btn = document.getElementById('servers-refresh-btn');
   const grid = document.getElementById('servers-grid');
-  if (btn) { btn.disabled = true; btn.textContent = 'Опрашиваю...'; }
-  if (!serversLoadedOnce) grid.innerHTML = '<div class="text-[#a9abb3]">Опрашиваю серверы по SSH...</div>';
+  if (btn) { btn.disabled = true; btn.textContent = 'Опрашиваю…'; }
+  if (!serversLoadedOnce) grid.innerHTML = '<div class="text-on-surface-variant text-sm">Опрашиваю серверы по SSH…</div>';
   try {
     const res = await fetch(`${API_URL}/api/admin/servers-stats`, {
       method: 'POST',
@@ -823,15 +1048,15 @@ async function loadServers(forceRefresh) {
     });
     const data = await res.json();
     if (!res.ok) {
-      grid.innerHTML = `<div class="text-[#ff716c]">${escapeHtml(data.error || 'Ошибка загрузки')}</div>`;
+      grid.innerHTML = `<div class="text-error text-sm">${escapeHtml(data.error || 'Ошибка загрузки')}</div>`;
       return;
     }
     serversLoadedOnce = true;
     renderServers(data.servers || [], data);
   } catch (e) {
-    grid.innerHTML = `<div class="text-[#ff716c]">Ошибка соединения: ${escapeHtml(String(e))}</div>`;
+    grid.innerHTML = `<div class="text-error text-sm">Ошибка соединения: ${escapeHtml(String(e))}</div>`;
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Обновить'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Обновить метрики'; }
   }
 }
 
@@ -846,7 +1071,7 @@ async function loadAlerts() {
   const currEl = document.getElementById('alerts-current');
   const logEl = document.getElementById('alerts-log');
   const btn = document.getElementById('alerts-refresh-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Загрузка...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Загрузка…'; }
   try {
     const res = await fetch(`${API_URL}/api/admin/alerts`, {
       method: 'POST',
@@ -855,7 +1080,7 @@ async function loadAlerts() {
     });
     const data = await res.json();
     if (!res.ok) {
-      currEl.innerHTML = `<div class="text-[#ff716c]">${escapeHtml(data.error || 'Ошибка')}</div>`;
+      currEl.innerHTML = `<div class="text-error text-sm">${escapeHtml(data.error || 'Ошибка')}</div>`;
       return;
     }
     alertsLoadedOnce = true;
@@ -870,48 +1095,48 @@ async function loadAlerts() {
     }
     const labels = data.labels || {};
     if (!data.current.length) {
-      currEl.innerHTML = `<div class="text-[#a9abb3] text-sm col-span-full">Нет данных — watcher ещё не стартовал или admin_email не задан.</div>`;
+      currEl.innerHTML = `<div class="text-on-surface-variant text-sm col-span-full">Нет данных — watcher ещё не стартовал или admin_email не задан.</div>`;
     } else {
       currEl.innerHTML = data.current.map(c => {
         const ok = !c.issues.length;
-        const color = ok ? '#00eefc' : '#ff716c';
+        const stateBadge = ok ? '<span class="badge badge-success">OK</span>' : '<span class="badge badge-error">ALERT</span>';
         const status = ok ? 'OK' : c.issues.map(i => escapeHtml(labels[i] || i)).join(', ');
         return `
-          <div class="bg-[#161a21] rounded-xl p-4 border border-[#22262f]">
-            <div class="flex items-center justify-between">
-              <div class="font-semibold">${c.flag || ''} ${escapeHtml(c.name)}</div>
-              <div class="text-xs font-semibold" style="color:${color}">${ok ? 'OK' : 'ALERT'}</div>
+          <div class="wx-card p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="font-semibold text-sm">${c.flag || ''} ${escapeHtml(c.name)}</div>
+              ${stateBadge}
             </div>
-            <div class="text-xs text-[#a9abb3] mt-1">${status}</div>
-            ${c.last_alert_ts ? `<div class="text-[10px] text-[#a9abb3] mt-1">последний алерт: ${new Date(c.last_alert_ts*1000).toLocaleString('ru-RU')}</div>` : ''}
+            <div class="text-xs text-on-surface-variant mt-1.5">${status}</div>
+            ${c.last_alert_ts ? `<div class="text-[10px] text-on-surface-variant mt-1">последний алерт: ${new Date(c.last_alert_ts*1000).toLocaleString('ru-RU')}</div>` : ''}
           </div>
         `;
       }).join('');
     }
     if (!data.log.length) {
-      logEl.innerHTML = `<div class="p-4 text-[#a9abb3] text-sm">Событий нет.</div>`;
+      logEl.innerHTML = `<div class="p-4 text-on-surface-variant text-sm">Событий нет.</div>`;
     } else {
       logEl.innerHTML = data.log.map(e => {
         const newStr = (e.new || []).map(i => labels[i] || i).join(', ');
         const resStr = (e.resolved || []).map(i => labels[i] || i).join(', ');
         const lines = [];
-        if (newStr) lines.push(`<span style="color:#ff716c">▲</span> ${escapeHtml(newStr)}`);
-        if (resStr) lines.push(`<span style="color:#00eefc">▼</span> ${escapeHtml(resStr)}`);
-        const email = e.email_sent ? '<span style="color:#00eefc">email отправлен</span>' : '<span style="color:#ff9aa7">email не отправлен</span>';
+        if (newStr) lines.push(`<span class="text-error">▲</span> ${escapeHtml(newStr)}`);
+        if (resStr) lines.push(`<span class="text-success">▼</span> ${escapeHtml(resStr)}`);
+        const email = e.email_sent ? '<span class="text-success">email отправлен</span>' : '<span class="text-error">email не отправлен</span>';
         return `
           <div class="p-4">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-3">
               <div class="font-semibold text-sm">${escapeHtml(e.server_name || e.server)}</div>
-              <div class="text-xs text-[#a9abb3]">${new Date(e.ts*1000).toLocaleString('ru-RU')}</div>
+              <div class="text-xs text-on-surface-variant">${new Date(e.ts*1000).toLocaleString('ru-RU')}</div>
             </div>
-            <div class="text-xs mt-1 space-y-1">${lines.map(l => `<div>${l}</div>`).join('')}</div>
+            <div class="text-xs mt-1.5 space-y-1">${lines.map(l => `<div>${l}</div>`).join('')}</div>
             <div class="text-[10px] mt-1">${email}${e.email_target ? ' → ' + escapeHtml(e.email_target) : ''}</div>
           </div>
         `;
       }).join('');
     }
   } catch (e) {
-    currEl.innerHTML = `<div class="text-[#ff716c]">Ошибка: ${escapeHtml(String(e))}</div>`;
+    currEl.innerHTML = `<div class="text-error text-sm">Ошибка: ${escapeHtml(String(e))}</div>`;
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Обновить'; }
   }
@@ -919,7 +1144,7 @@ async function loadAlerts() {
 
 async function runAlertsNow() {
   const btn = document.getElementById('alerts-run-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Проверяю...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Проверяю…'; }
   try {
     const res = await fetch(`${API_URL}/api/admin/alerts-run`, {
       method: 'POST',
@@ -938,7 +1163,7 @@ async function runAlertsNow() {
 
 async function testAlertEmail() {
   const btn = document.getElementById('alerts-test-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Отправляю...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Отправляю…'; }
   try {
     const res = await fetch(`${API_URL}/api/admin/alerts-test`, {
       method: 'POST',
@@ -973,7 +1198,7 @@ function fmtRel(ts) {
 async function loadBackups() {
   const list = document.getElementById('backups-list');
   const refreshBtn = document.getElementById('backups-refresh-btn');
-  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = 'Загрузка...'; }
+  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = 'Загрузка…'; }
   try {
     const res = await fetch(`${API_URL}/api/admin/backups`, {
       method: 'POST',
@@ -982,26 +1207,26 @@ async function loadBackups() {
     });
     const data = await res.json();
     if (!res.ok) {
-      list.innerHTML = `<div class="p-4 text-[#ff716c]">${escapeHtml(data.error || 'Ошибка')}</div>`;
+      list.innerHTML = `<div class="p-4 text-error text-sm">${escapeHtml(data.error || 'Ошибка')}</div>`;
       return;
     }
     backupsLoadedOnce = true;
     const backups = data.backups || [];
     if (!backups.length) {
-      list.innerHTML = `<div class="p-4 text-[#a9abb3] text-sm">Бэкапов пока нет. Нажмите «Сделать бэкап сейчас» или дождитесь cron.</div>`;
+      list.innerHTML = `<div class="p-4 text-on-surface-variant text-sm">Бэкапов пока нет. Нажмите «Сделать бэкап сейчас» или дождитесь cron.</div>`;
       return;
     }
     list.innerHTML = backups.map(b => `
-      <div class="flex items-center justify-between p-4">
+      <div class="flex items-center justify-between p-4 gap-3">
         <div>
           <div class="font-mono text-sm">${escapeHtml(b.name)}</div>
-          <div class="text-[10px] text-[#a9abb3] mt-1">${new Date(b.mtime * 1000).toLocaleString('ru-RU')} · ${fmtRel(b.mtime)}</div>
+          <div class="text-[10px] text-on-surface-variant mt-1">${new Date(b.mtime * 1000).toLocaleString('ru-RU')} · ${fmtRel(b.mtime)}</div>
         </div>
-        <div class="text-sm text-[#a9abb3]">${fmtBytes(b.size)}</div>
+        <div class="text-sm text-on-surface-variant font-mono">${fmtBytes(b.size)}</div>
       </div>
     `).join('');
   } catch (e) {
-    list.innerHTML = `<div class="p-4 text-[#ff716c]">Ошибка: ${escapeHtml(String(e))}</div>`;
+    list.innerHTML = `<div class="p-4 text-error text-sm">Ошибка: ${escapeHtml(String(e))}</div>`;
   } finally {
     if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = 'Обновить'; }
   }
@@ -1011,8 +1236,8 @@ async function runBackupNow() {
   const btn = document.getElementById('backup-now-btn');
   const logEl = document.getElementById('backup-log');
   if (!confirm('Запустить бэкап сейчас? Это не влияет на работу VPN.')) return;
-  if (btn) { btn.disabled = true; btn.textContent = 'Выполняю...'; }
-  if (logEl) { logEl.classList.remove('hidden'); logEl.textContent = 'Выполняется...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Выполняю…'; }
+  if (logEl) { logEl.classList.remove('hidden'); logEl.textContent = 'Выполняется…'; }
   try {
     const res = await fetch(`${API_URL}/api/admin/backup-now`, {
       method: 'POST',
@@ -1051,14 +1276,14 @@ async function loadFailoverStatus() {
     });
     const data = await res.json();
     if (!res.ok) {
-      box.innerHTML = `<div class="text-[#ff716c]">${escapeHtml(data.error || 'Ошибка')}</div>`;
+      box.innerHTML = `<div class="text-error text-sm">${escapeHtml(data.error || 'Ошибка')}</div>`;
       return;
     }
     const status = data.status || {};
     const keys = Object.keys(status);
-    const meta = `<div class="text-[10px] text-[#a9abb3] mb-2">Чек каждые ${data.interval_sec}с · fail≥${data.fail_threshold} → failover · ok≥${data.ok_threshold} → recovery</div>`;
+    const meta = `<div class="text-[10px] text-on-surface-variant mb-2 uppercase tracking-[0.12em]">Чек каждые ${data.interval_sec}с · fail≥${data.fail_threshold} → failover · ok≥${data.ok_threshold} → recovery</div>`;
     if (!keys.length) {
-      box.innerHTML = meta + '<div class="text-[#a9abb3]">Health-check ещё не тикал (подождите пару минут после старта).</div>';
+      box.innerHTML = meta + '<div class="text-on-surface-variant text-sm">Health-check ещё не тикал (подождите пару минут после старта).</div>';
       return;
     }
     const now = data.now;
@@ -1066,17 +1291,17 @@ async function loadFailoverStatus() {
       const s = status[k];
       const ago = s.last_check_ts ? (now - s.last_check_ts) + 's назад' : '—';
       const state = s.failed_over
-        ? `<span class="text-[#ff716c]">FAILED OVER → ${escapeHtml(s.failover_to || '?')}</span>`
-        : (s.fail_count > 0 ? `<span style="color:#ffb453">fails=${s.fail_count}</span>` : '<span style="color:#6ee7b7">OK</span>');
+        ? `<span class="badge badge-error">FAILED OVER → ${escapeHtml(s.failover_to || '?')}</span>`
+        : (s.fail_count > 0 ? `<span class="badge badge-warn">fails=${s.fail_count}</span>` : '<span class="badge badge-success">OK</span>');
       return `
-        <div class="bg-[#161a21] rounded p-2">
-          <div class="font-semibold">${escapeHtml(k)}</div>
-          <div class="text-xs">${state}</div>
-          <div class="text-[10px] text-[#a9abb3]">проверка ${ago} · ok=${s.ok_count} fail=${s.fail_count}</div>
+        <div class="wx-card-deep p-3">
+          <div class="font-semibold text-sm">${escapeHtml(k)}</div>
+          <div class="text-xs mt-1.5">${state}</div>
+          <div class="text-[10px] text-on-surface-variant mt-1">проверка ${ago} · ok=${s.ok_count} fail=${s.fail_count}</div>
         </div>`;
     }).join('') + '</div>';
   } catch (e) {
-    box.innerHTML = `<div class="text-[#ff716c]">Ошибка: ${escapeHtml(String(e))}</div>`;
+    box.innerHTML = `<div class="text-error text-sm">Ошибка: ${escapeHtml(String(e))}</div>`;
   }
 }
 
@@ -1092,7 +1317,7 @@ async function loadServerPool() {
     });
     const data = await res.json();
     if (!res.ok) {
-      box.innerHTML = `<div class="text-[#ff716c]">${escapeHtml(data.error || 'Ошибка')}</div>`;
+      box.innerHTML = `<div class="text-error text-sm">${escapeHtml(data.error || 'Ошибка')}</div>`;
       return;
     }
     const rule = data.capacity_rule || {};
@@ -1100,58 +1325,64 @@ async function loadServerPool() {
     document.getElementById('servers-meta').textContent =
       `Серверов: ${items.length} · формула: bw / ${rule.peak_mbps_per_user} Мбит × ${Math.round((1/(rule.concurrency||0.3))*10)/10} = max_users`;
 
-    // Заполняем select "резерв для" всеми существующими серверами
     if (backupSelect) {
       backupSelect.innerHTML = '<option value="">— не резерв —</option>' +
         items.map(s => `<option value="${escapeHtml(s.key)}">${s.flag || ''} ${escapeHtml(s.name)} (${escapeHtml(s.key)})</option>`).join('');
     }
 
     if (!items.length) {
-      box.innerHTML = '<div class="text-[#a9abb3] text-sm">Нет серверов — добавь первый.</div>';
+      box.innerHTML = '<div class="text-on-surface-variant text-sm">Нет серверов — добавь первый.</div>';
       return;
     }
     box.innerHTML = items.map(s => {
       const occ = s.max_users ? Math.round((s.users_count / s.max_users) * 100) : 0;
-      const occColor = occ >= 90 ? '#ff716c' : occ >= 70 ? '#ffb453' : '#6ee7b7';
+      const occColor = occ >= 90 ? 'var(--wx-error)' : occ >= 70 ? 'var(--wx-warning)' : 'var(--wx-success)';
       const disabled = s.disabled;
+      const disabledTag = disabled ? '<span class="badge badge-warn ml-1">disabled</span>' : '';
       return `
-        <div class="bg-[#0b0e14] border border-[#22262f] rounded-lg p-3" data-key="${escapeHtml(s.key)}">
+        <div class="wx-card-deep p-4" data-key="${escapeHtml(s.key)}">
           <div class="flex items-center gap-3 flex-wrap">
             <span class="text-2xl">${s.flag || '🏳️'}</span>
-            <div class="flex-1 min-w-[180px]">
-              <div class="font-semibold">${escapeHtml(s.name)} <span class="text-[10px] text-[#a9abb3] font-mono">${escapeHtml(s.key)}${s.from_seed ? ' · seed' : ''}${disabled ? ' · <span style=\"color:#ffb453\">disabled</span>' : ''}</span></div>
-              <div class="text-[10px] text-[#a9abb3] font-mono">${escapeHtml(s.ip)}:${s.port}${s.backup_for ? ' · резерв для ' + escapeHtml(s.backup_for) : ''}</div>
+            <div class="flex-1 min-w-[200px]">
+              <div class="font-semibold text-sm">${escapeHtml(s.name)} <span class="text-[10px] text-on-surface-variant font-mono ml-1">${escapeHtml(s.key)}${s.from_seed ? ' · seed' : ''}</span>${disabledTag}</div>
+              <div class="text-[10px] text-on-surface-variant font-mono mt-0.5">${escapeHtml(s.ip)}:${s.port}${s.backup_for ? ' · резерв для ' + escapeHtml(s.backup_for) : ''}</div>
             </div>
             <div class="text-right">
-              <div class="text-sm font-semibold" style="color:${occColor}">${s.users_count} / ${s.max_users}</div>
-              <div class="text-[10px] text-[#a9abb3]">${s.bandwidth_mbps || '?'} Мбит/с · ${occ}%</div>
+              <div class="text-sm font-semibold font-mono" style="color:${occColor}">${s.users_count} / ${s.max_users}</div>
+              <div class="text-[10px] text-on-surface-variant">${s.bandwidth_mbps || '?'} Мбит/с · ${occ}%</div>
             </div>
           </div>
-          <div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-            <label class="block"><span class="text-[#a9abb3]">Bandwidth</span>
-              <input type="number" data-field="bandwidth_mbps" value="${s.bandwidth_mbps || 50}" class="w-full mt-1 px-2 py-1 rounded bg-[#161a21] font-mono">
+          <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <label class="block">
+              <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1">Bandwidth</span>
+              <input type="number" data-field="bandwidth_mbps" value="${s.bandwidth_mbps || 50}" class="wx-input w-full font-mono text-xs" style="padding:6px 10px">
             </label>
-            <label class="block"><span class="text-[#a9abb3]">max_users override (0=формула)</span>
-              <input type="number" data-field="max_users" value="" placeholder="${s.max_users}" class="w-full mt-1 px-2 py-1 rounded bg-[#161a21] font-mono">
+            <label class="block">
+              <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1">max_users (0=формула)</span>
+              <input type="number" data-field="max_users" value="" placeholder="${s.max_users}" class="wx-input w-full font-mono text-xs" style="padding:6px 10px">
             </label>
-            <label class="block"><span class="text-[#a9abb3]">Резерв для</span>
-              <select data-field="backup_for" class="w-full mt-1 px-2 py-1 rounded bg-[#161a21]">
+            <label class="block">
+              <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1">Резерв для</span>
+              <select data-field="backup_for" class="wx-input w-full text-xs" style="padding:6px 10px">
                 <option value="">—</option>
                 ${items.filter(x => x.key !== s.key).map(x =>
                   `<option value="${escapeHtml(x.key)}"${x.key === s.backup_for ? ' selected' : ''}>${escapeHtml(x.key)}</option>`
                 ).join('')}
               </select>
             </label>
-            <label class="block"><span class="text-[#a9abb3]">Отключить</span>
-              <select data-field="disabled" class="w-full mt-1 px-2 py-1 rounded bg-[#161a21]">
+            <label class="block">
+              <span class="block text-[10px] text-on-surface-variant uppercase tracking-[0.12em] mb-1">Отключить</span>
+              <select data-field="disabled" class="wx-input w-full text-xs" style="padding:6px 10px">
                 <option value="false"${!disabled ? ' selected' : ''}>нет</option>
                 <option value="true"${disabled ? ' selected' : ''}>да</option>
               </select>
             </label>
           </div>
-          <div class="mt-2 flex gap-2">
-            <button class="btn-primary text-xs" data-save>Сохранить</button>
-            ${s.users_count === 0 ? `<button class="text-xs px-3 py-1 rounded bg-[#3a1f25] text-[#ff9aa7]" data-remove>Удалить</button>` : `<button class="text-xs px-3 py-1 rounded bg-[#3a1f25] text-[#ff9aa7]" data-remove-force>Удалить принудительно (${s.users_count} юзеров)</button>`}
+          <div class="mt-3 flex gap-2 flex-wrap">
+            <button class="btn-primary" data-save>Сохранить</button>
+            ${s.users_count === 0
+              ? `<button class="btn-danger" data-remove>Удалить</button>`
+              : `<button class="btn-danger" data-remove-force>Удалить принудительно (${s.users_count} юзеров)</button>`}
           </div>
         </div>`;
     }).join('');
@@ -1166,7 +1397,7 @@ async function loadServerPool() {
       btn.onclick = () => removeServer(btn.closest('[data-key]').dataset.key, true);
     });
   } catch (e) {
-    box.innerHTML = `<div class="text-[#ff716c]">Ошибка: ${escapeHtml(String(e))}</div>`;
+    box.innerHTML = `<div class="text-error text-sm">Ошибка: ${escapeHtml(String(e))}</div>`;
   }
 }
 
@@ -1208,7 +1439,6 @@ async function removeServer(key, force) {
 }
 
 // Список стран для пикера. ISO 3166-1 alpha-2 → русское имя.
-// Покрытие — около 60 популярных юрисдикций для VPN-узлов; флаг считается из ISO кода.
 const COUNTRY_LIST = [
   ['NL','Нидерланды','Netherlands'],['DE','Германия','Germany'],['FR','Франция','France'],
   ['FI','Финляндия','Finland'],['SE','Швеция','Sweden'],['NO','Норвегия','Norway'],
@@ -1234,7 +1464,6 @@ const COUNTRY_LIST = [
   ['CL','Чили','Chile'],['ZA','ЮАР','South Africa'],['EG','Египет','Egypt'],
 ];
 
-// ISO 2-letter → emoji через regional indicator unicode (A=0x1F1E6 + offset).
 function isoToFlag(iso) {
   if (!iso || iso.length !== 2) return '';
   const cc = iso.toUpperCase();
@@ -1250,24 +1479,20 @@ function populateCountryDatalist() {
   ).join('');
 }
 
-// Парсит выбор из datalist обратно в ISO/имя/флаг.
 function resolveCountrySelection(rawValue) {
   const v = (rawValue || '').trim();
   if (!v) return null;
-  // 1) Явный формат "🇩🇪 Германия (DE)" — берём ISO из скобок.
   const m = v.match(/\(([A-Za-z]{2})\)\s*$/);
   if (m) {
     const iso = m[1].toUpperCase();
     const hit = COUNTRY_LIST.find(([c]) => c === iso);
     if (hit) return { iso, name: hit[1], flag: isoToFlag(iso) };
   }
-  // 2) Голый ISO: "DE"
   if (/^[A-Za-z]{2}$/.test(v)) {
     const iso = v.toUpperCase();
     const hit = COUNTRY_LIST.find(([c]) => c === iso);
     if (hit) return { iso, name: hit[1], flag: isoToFlag(iso) };
   }
-  // 3) Поиск по русскому/английскому имени (case-insensitive substring).
   const low = v.toLowerCase();
   const byName = COUNTRY_LIST.find(([, ru, en]) =>
     ru.toLowerCase() === low || en.toLowerCase() === low
@@ -1281,7 +1506,6 @@ function resolveCountrySelection(rawValue) {
   return null;
 }
 
-// Live-апдейт: на каждый ввод пробуем резолвить, заполняем hidden поля и превью.
 function syncCountryPicker() {
   const search = document.getElementById('srv-country-search');
   const hidIso = document.getElementById('srv-country');
@@ -1311,7 +1535,6 @@ document.getElementById('servers-add-btn')?.addEventListener('click', () => {
 });
 document.getElementById('srv-country-search')?.addEventListener('input', syncCountryPicker);
 document.getElementById('srv-name')?.addEventListener('input', (e) => {
-  // как только юзер сам редактирует — отключаем автозаполнение из пикера
   if (e.isTrusted) e.target.dataset.autofill = '';
 });
 document.getElementById('server-add-close')?.addEventListener('click', () => {
@@ -1320,12 +1543,11 @@ document.getElementById('server-add-close')?.addEventListener('click', () => {
 document.getElementById('server-add-submit')?.addEventListener('click', async () => {
   const statusEl = document.getElementById('server-add-status');
   const btn = document.getElementById('server-add-submit');
-  // финальная синхронизация: вдруг юзер ввёл и сразу нажал submit
   syncCountryPicker();
   const country = document.getElementById('srv-country').value.trim().toUpperCase();
   const flag = document.getElementById('srv-flag').value.trim();
   if (!country) {
-    statusEl.innerHTML = '<span class="text-[#ff716c]">Выбери страну из списка (или введи ISO-код)</span>';
+    statusEl.innerHTML = '<span class="text-error">Выбери страну из списка (или введи ISO-код)</span>';
     return;
   }
   const body = {
@@ -1339,7 +1561,7 @@ document.getElementById('server-add-submit')?.addEventListener('click', async ()
     backup_for: document.getElementById('srv-backup-for').value,
   };
   btn.disabled = true;
-  statusEl.textContent = 'Пробую SSH, ставлю xray+hysteria (может занять 2-3 мин)...';
+  statusEl.textContent = 'Пробую SSH, ставлю xray+hysteria (может занять 2-3 мин)…';
   try {
     const res = await fetch(`${API_URL}/api/admin/servers/add`, {
       method: 'POST',
@@ -1348,17 +1570,17 @@ document.getElementById('server-add-submit')?.addEventListener('click', async ()
     });
     const data = await res.json();
     if (!res.ok) {
-      statusEl.innerHTML = `<span class="text-[#ff716c]">${escapeHtml(data.error || 'Ошибка')}</span>${data.ssh_error ? '<br><span class="font-mono text-[10px]">' + escapeHtml(data.ssh_error) + '</span>' : ''}${data.stderr ? '<pre class="text-[10px] mt-2 whitespace-pre-wrap max-h-40 overflow-auto">' + escapeHtml(data.stderr) + '</pre>' : ''}`;
+      statusEl.innerHTML = `<span class="text-error">${escapeHtml(data.error || 'Ошибка')}</span>${data.ssh_error ? '<br><span class="font-mono text-[10px]">' + escapeHtml(data.ssh_error) + '</span>' : ''}${data.stderr ? '<pre class="text-[10px] mt-2 whitespace-pre-wrap max-h-40 overflow-auto">' + escapeHtml(data.stderr) + '</pre>' : ''}`;
       return;
     }
-    statusEl.innerHTML = `<span class="text-[#6ee7b7]">OK · key=${escapeHtml(data.key)}</span>`;
+    statusEl.innerHTML = `<span class="text-success">OK · key=${escapeHtml(data.key)}</span>`;
     document.getElementById('server-add-form').classList.add('hidden');
     ['srv-ip','srv-country','srv-name','srv-flag','srv-country-search','srv-backup-for'].forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('srv-flag-preview').textContent = '';
     document.getElementById('srv-name').dataset.autofill = '';
     await loadServerPool();
   } catch (e) {
-    statusEl.innerHTML = `<span class="text-[#ff716c]">Ошибка сети: ${escapeHtml(String(e))}</span>`;
+    statusEl.innerHTML = `<span class="text-error">Ошибка сети: ${escapeHtml(String(e))}</span>`;
   } finally {
     btn.disabled = false;
   }
@@ -1380,10 +1602,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   };
 });
 
-// Payments filter
 document.getElementById('payments-filter').onchange = loadAll;
 
-// Quick actions
 document.getElementById('quick-ext-btn').onclick = () => {
   const email = document.getElementById('quick-ext-email').value.trim();
   const days = parseInt(document.getElementById('quick-ext-days').value || '0', 10);

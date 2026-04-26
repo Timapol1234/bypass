@@ -784,7 +784,7 @@ let currentHy2Url = '';
 let userEmail = localStorage.getItem('user_email') || '';
 let sessionToken = localStorage.getItem('session_token');
 let selectedServer = null;
-const API_URL = 'http://109.248.162.180:8080';
+const API_URL = 'https://api.wirex.online';
 let serversList = {};
 let countdownTimer = null;
 
@@ -893,7 +893,7 @@ function buildClientDeepLinks(subUrl, vlessUrl, hy2Url) {
     // «URL подписки не валидна». HTTP-подписку Happ принимает, но может
     // показать предупреждение «небезопасная схема» — это не блокер.
     return {
-        v2box: `v2box://install-sub?url=${enc}&name=BYPASS`,
+        v2box: `v2box://install-sub?url=${enc}&name=WIREX`,
         v2raytun: `v2raytun://import/${enc}`,
         happ: `happ://add/${enc}`,
     };

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BYPASS is a VPN key management service. Users authenticate via email OTP, select a server, and receive VLESS keys/QR codes for Xray-based VPN access. The admin panel manages users and has a built-in chat system.
+WIREX (исторически BYPASS, GitHub-репо ещё называется bypass) — VPN key management service. Users authenticate via email OTP, select a server, and receive VLESS keys/QR codes for Xray-based VPN access. The admin panel manages users and has a built-in chat system.
 
 ## Architecture
 

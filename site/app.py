@@ -45,7 +45,7 @@ TARIFFS = {
 }
 
 # Хост, с которого раздаются файлы подписок (файлы лежат только на NL-сервере)
-SUB_HOST = "109.248.162.180:8080"
+SUB_HOST = "api.wirex.online"
 
 # Время жизни сессии
 SESSION_TTL_DAYS = 30
@@ -56,7 +56,7 @@ ONLINE_THRESHOLD_SECONDS = 120
 
 # Название бренда в имени ключа (показывается в VPN-клиенте как Remarks).
 # При переименовании сервиса достаточно поменять здесь.
-BRAND_NAME = "BYPASS"
+BRAND_NAME = "WIREX"
 
 
 def key_tag(server_key_or_obj, protocol: str) -> str:
@@ -442,15 +442,15 @@ def _admin_notify_failover(primary_key, backup=None, recovered=False):
     _save_json(ALERTS_STATE_FILE, state)
 
     if recovered:
-        subject = f"[BYPASS] Сервер {primary_key} восстановлен"
+        subject = f"[WIREX] Сервер {primary_key} восстановлен"
         body = f"<p>Сервер <b>{primary_key}</b> снова отвечает. Подписки юзеров возвращены на primary.</p>"
     elif backup:
-        subject = f"[BYPASS] Failover: {primary_key} → {backup}"
+        subject = f"[WIREX] Failover: {primary_key} → {backup}"
         body = (f"<p>Сервер <b>{primary_key}</b> не отвечает ≥{HEALTH_FAIL_THRESHOLD * HEALTH_CHECK_INTERVAL_SEC // 60} мин.</p>"
                 f"<p>Подписки юзеров переписаны на <b>{backup}</b> (только Hysteria 2, "
                 f"VLESS UUID не зарегистрированы на резерве).</p>")
     else:
-        subject = f"[BYPASS] Сервер {primary_key} не отвечает, резерв не настроен"
+        subject = f"[WIREX] Сервер {primary_key} не отвечает, резерв не настроен"
         body = (f"<p>Сервер <b>{primary_key}</b> не отвечает, а в servers.json у него нет "
                 f"резерва (backup_for). Юзеры без связи.</p>")
     send_admin_email(subject, body)
@@ -478,6 +478,10 @@ if not SMTP_CONFIG["password"]:
 # CORS: отвечаем заголовками только своему origin'у. Без `*` — иначе любой сторонний
 # сайт мог бы делать POST /api/create с угнанным токеном.
 ALLOWED_ORIGINS = {
+    "https://wirex.online",
+    "https://www.wirex.online",
+    "https://api.wirex.online",
+    # Vercel preview-деплои — закрыть, как только домен проверится
     "http://109.248.162.180:8080",
     "https://109.248.162.180:8080",
 }
@@ -720,9 +724,9 @@ def revoke_session(token):
 def send_verification_email(email, code):
     try:
         msg = MIMEMultipart()
-        msg['From'] = f"BYPASS <{SMTP_CONFIG['username']}>"
+        msg['From'] = f"WIREX <{SMTP_CONFIG['username']}>"
         msg['To'] = email
-        msg['Subject'] = "Подтверждение email - BYPASS VPN"
+        msg['Subject'] = "Подтверждение email - WIREX"
         
         body = f"""
         <html>
@@ -731,7 +735,7 @@ def send_verification_email(email, code):
         </head>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: linear-gradient(135deg, #8ff5ff 0%, #00eefc 100%); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-                <h1 style="color: #005d63; margin: 0;">BYPASS VPN</h1>
+                <h1 style="color: #F5F5F5; margin: 0;">WIREX</h1>
             </div>
             <div style="background: #161a21; padding: 30px; border-radius: 0 0 10px 10px; color: #ecedf6;">
                 <h2 style="margin-top: 0;">Подтверждение email</h2>
@@ -1371,7 +1375,7 @@ def build_key_data(user):
     username = user["username"]
     s = SERVERS[server_key]
     vless_url = build_vless_url(user["uuid"], server_key)
-    sub_url = f"http://{SUB_HOST}/sub/{sub_slug(username, user['uuid'])}"
+    sub_url = f"https://{SUB_HOST}/sub/{sub_slug(username, user['uuid'])}"
     data = {
         "uuid": user["uuid"],
         "username": username,
@@ -2589,7 +2593,7 @@ def send_admin_email(subject, body_html):
         return False
     try:
         msg = MIMEMultipart()
-        msg['From'] = f"BYPASS Alerts <{SMTP_CONFIG['username']}>"
+        msg['From'] = f"WIREX Alerts <{SMTP_CONFIG['username']}>"
         msg['To'] = ADMIN_EMAIL
         msg['Subject'] = subject
         msg.attach(MIMEText(body_html, 'html'))
@@ -2628,7 +2632,7 @@ def _build_alert_email(srv_key, srv, new_issues, resolved_issues):
     mem_pct = round(mem_u / mem_t * 100) if (mem_t and mem_u) else None
     body = f"""
     <html><body style='font-family:Arial,sans-serif;max-width:600px'>
-    <h2 style='margin:0 0 8px'>⚠️ BYPASS alerts — {title}</h2>
+    <h2 style='margin:0 0 8px'>⚠️ WIREX alerts — {title}</h2>
     <div style='color:#666;font-size:12px;margin-bottom:16px'>{s.get('ip','')}:{s.get('port','')}</div>
     {''.join(rows)}
     <hr style='border:none;border-top:1px solid #ddd;margin:16px 0'>
@@ -2640,7 +2644,7 @@ def _build_alert_email(srv_key, srv, new_issues, resolved_issues):
     </div>
     </body></html>
     """
-    subj_parts = [f"[BYPASS] {s.get('name', srv_key)}"]
+    subj_parts = [f"[WIREX] {s.get('name', srv_key)}"]
     if new_issues: subj_parts.append("PROBLEM: " + ", ".join(new_issues))
     if resolved_issues and not new_issues: subj_parts.append("RECOVERED: " + ", ".join(resolved_issues))
     return " · ".join(subj_parts), body
@@ -2747,8 +2751,8 @@ def admin_alerts_test():
     if not ADMIN_EMAIL:
         return jsonify({"error": "admin_email не задан в secrets.json"}), 400
     ok = send_admin_email(
-        "[BYPASS] Тестовое письмо алертов",
-        "<p>Это тестовое сообщение из админ-панели BYPASS. Если вы его получили — алерты настроены корректно.</p>"
+        "[WIREX] Тестовое письмо алертов",
+        "<p>Это тестовое сообщение из админ-панели WIREX. Если вы его получили — алерты настроены корректно.</p>"
     )
     return jsonify({"ok": ok, "admin_email": ADMIN_EMAIL})
 

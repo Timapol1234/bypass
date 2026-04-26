@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Установщик Xray (VLESS + Reality) для BYPASS VPN.
+# Установщик Xray (VLESS + Reality) для WIREX.
 # Запускается на свежем сервере при добавлении через админку.
 # Идемпотентный: при повторном запуске не перезаписывает уже сгенерированные ключи.
 #
@@ -14,7 +14,7 @@ SNI="www.microsoft.com"
 DEST="$SNI:443"
 SID_DEFAULT="abcd1234"
 
-echo "=== BYPASS Xray installer ===" >&2
+echo "=== WIREX Xray installer ===" >&2
 
 # 0. Зависимости apt (на свежем сервере кэш apt может быть пустой,
 #    и официальный Xray-install падает на `apt install unzip`).

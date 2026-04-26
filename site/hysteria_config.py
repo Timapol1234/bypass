@@ -1,5 +1,5 @@
 """
-Интеграция Hysteria 2 на серверах BYPASS.
+Интеграция Hysteria 2 на серверах WIREX.
 
 Авторизация теперь через HTTP-колбэк: Hysteria дёргает /api/hy-auth на Flask
 (Амстердам, порт 8080), тот сверяет пароль с users.json. Значит per-server
@@ -78,11 +78,11 @@ def build_uri(server_key: str, server: dict, username: str, password: str,
     Так его парсит V2Box — он не поддерживает userpass-форму user:pass@host.
     `username` в сигнатуре оставлен ради совместимости со старыми вызовами.
     `name_tag` — готовый Remarks для клиента (см. app.key_tag). Если None,
-    подставляется legacy-формат `BYPASS-<server name>`."""
+    подставляется legacy-формат `WIREX-<server name>`."""
     obfs_pw = get_obfs_password(server_key, server)
     host = server["ip"]
     if not name_tag:
-        name_tag = f"BYPASS-{server.get('name', 'server')}"
+        name_tag = f"WIREX-{server.get('name', 'server')}"
     params = [
         "obfs=salamander",
         f"obfs-password={quote(obfs_pw, safe='')}",
