@@ -635,23 +635,10 @@ Protected
 
 <div id="payment-error" class="text-error text-xs mb-3 hidden"></div>
 
-<!-- Кнопка lava.top — видна если lava_enabled. Primary CTA. -->
-<button id="lava-pay-btn" class="hidden primary-gradient py-3.5 rounded-lg font-bold text-sm w-full active:scale-[0.98] transition-all mb-3 disabled:opacity-40 uppercase tracking-wider">
-<span id="lava-pay-btn-label">Оплатить картой</span>
+<!-- Оплата через lava.top (карта / СБП — юзер выбирает на странице оплаты). -->
+<button id="lava-pay-btn" class="primary-gradient py-3.5 rounded-lg font-bold text-sm w-full active:scale-[0.98] transition-all mb-4 disabled:opacity-40 uppercase tracking-wider">
+<span id="lava-pay-btn-label">Оплатить подписку</span>
 </button>
-
-<!-- Ручная оплата — fallback. Если lava включена, прячется под раскрывающийся блок. -->
-<details id="manual-pay-block" class="mb-4">
-<summary id="manual-pay-summary" class="text-xs text-on-surface-variant hover:text-primary cursor-pointer select-none uppercase tracking-wider font-semibold">Оплатить вручную (СБП / перевод)</summary>
-<div class="wx-card rounded-lg p-4 mt-3">
-<div class="text-[11px] text-primary font-bold uppercase tracking-[0.12em] mb-2">Реквизиты</div>
-<div id="payment-info" class="text-sm text-on-surface space-y-1.5 font-mono"></div>
-<div id="payment-note" class="text-[11px] text-on-surface-variant mt-3 pt-3 border-t border-outline-variant"></div>
-<button id="i-paid-btn" class="primary-gradient py-3 rounded-lg font-bold text-sm w-full active:scale-[0.98] transition-all mt-4 disabled:opacity-40 uppercase tracking-wider">
-<span id="i-paid-btn-label">Я оплатил — отправить на проверку</span>
-</button>
-</div>
-</details>
 
 <div class="border-t border-outline-variant pt-5">
 <label class="text-[11px] text-on-surface-variant font-semibold uppercase tracking-[0.12em]">Или промокод</label>
@@ -1570,56 +1557,35 @@ function renderTariffGrid() {
 }
 
 function updateLavaButton() {
-    // Кнопка lava видна только если бэк включён И тариф поддерживает оплату картой.
+    // Лейбл с ценой выбранного тарифа. Если lava недоступна или тариф не поддерживается —
+    // кнопка disabled, чтобы не дать кликнуть в пустоту.
     const btn = document.getElementById('lava-pay-btn');
     const label = document.getElementById('lava-pay-btn-label');
-    const manual = document.getElementById('manual-pay-block');
     if (!btn) return;
     const tariff = tariffs.find(t => t.id === selectedTariffId);
     const lavaOn = !!(paymentInfo && paymentInfo.lava_enabled && tariff && tariff.card_pay_enabled);
     if (lavaOn) {
-        btn.classList.remove('hidden');
-        label.textContent = `Оплатить картой ${tariff.price}₽`;
-        // Если lava доступна — ручную оплату прячем под expander, иначе она видна как раньше.
-        if (manual && !manual.hasAttribute('data-toggled-by-user')) manual.removeAttribute('open');
+        btn.disabled = false;
+        label.textContent = `Оплатить подписку · ${tariff.price}₽`;
     } else {
-        btn.classList.add('hidden');
-        if (manual) manual.setAttribute('open', '');
+        btn.disabled = true;
+        label.textContent = 'Оплата временно недоступна';
     }
-}
-
-function renderPaymentInfo() {
-    const box = document.getElementById('payment-info');
-    const noteEl = document.getElementById('payment-note');
-    if (!paymentInfo) {
-        box.innerHTML = '<div class="text-on-surface-variant">Реквизиты уточняются...</div>';
-        noteEl.textContent = '';
-        return;
-    }
-    const rows = [];
-    if (paymentInfo.sbp_phone) rows.push(`<div><span class="text-on-surface-variant">СБП:</span> <strong class="font-mono">${escapeHtml(paymentInfo.sbp_phone)}</strong>${paymentInfo.sbp_bank ? ` <span class="text-on-surface-variant">(${escapeHtml(paymentInfo.sbp_bank)})</span>` : ''}</div>`);
-    if (paymentInfo.card_number) rows.push(`<div><span class="text-on-surface-variant">Карта:</span> <strong class="font-mono">${escapeHtml(paymentInfo.card_number)}</strong></div>`);
-    if (paymentInfo.card_holder) rows.push(`<div><span class="text-on-surface-variant">Получатель:</span> ${escapeHtml(paymentInfo.card_holder)}</div>`);
-    if (!rows.length) rows.push('<div class="text-on-surface-variant">Реквизиты появятся скоро</div>');
-    box.innerHTML = rows.join('');
-    noteEl.textContent = paymentInfo.note || '';
 }
 
 function updateRenewalPreview() {
-    // Оформляем заголовки/кнопку и показываем превью продления, если подписка активна.
+    // Оформляем заголовки модалки и показываем превью продления, если подписка активна.
+    // Лейбл кнопки оплаты ставит updateLavaButton.
     const isRenewal = !!(currentSub && currentSub.active && currentSub.plan !== 'unlimited');
     const isUnlimited = !!(currentSub && currentSub.active && currentSub.plan === 'unlimited');
 
     const title = document.getElementById('payment-modal-title');
     const subtitle = document.getElementById('payment-modal-subtitle');
-    const btnLabel = document.getElementById('i-paid-btn-label');
     const preview = document.getElementById('renewal-preview');
 
     if (isUnlimited) {
-        // На безлимите подписку продлять бессмысленно — но модалка может открыться через промокод.
         if (title) title.textContent = 'Промокод или апгрейд';
         if (subtitle) subtitle.textContent = 'У вас безлимитный доступ. Тариф можно не выбирать — используйте промокод.';
-        if (btnLabel) btnLabel.textContent = 'Я оплатил — отправить на проверку';
         if (preview) preview.classList.add('hidden');
         return;
     }
@@ -1627,7 +1593,6 @@ function updateRenewalPreview() {
     if (isRenewal) {
         if (title) title.textContent = 'Продлить подписку';
         if (subtitle) subtitle.textContent = 'Оставшиеся дни сохраняются — новый срок прибавится к текущему.';
-        if (btnLabel) btnLabel.textContent = 'Я оплатил — продлить';
 
         if (preview) {
             const curr = new Date(currentSub.expires_at);
@@ -1650,8 +1615,7 @@ function updateRenewalPreview() {
 
     // Нет активной подписки — обычное «оформление».
     if (title) title.textContent = 'Оформить подписку';
-    if (subtitle) subtitle.textContent = 'Для создания ключа и работы VPN нужна активная подписка. Оплата ручная — после перевода нажмите «Я оплатил», админ подтвердит.';
-    if (btnLabel) btnLabel.textContent = 'Я оплатил — отправить на проверку';
+    if (subtitle) subtitle.textContent = 'Для создания ключа и работы ускорителя нужна активная подписка. Оплата картой или СБП через lava.top.';
     if (preview) preview.classList.add('hidden');
 }
 
@@ -1659,7 +1623,6 @@ async function openPaymentModal() {
     await ensureTariffs();
     if (!selectedTariffId && tariffs.length) selectedTariffId = tariffs[0].id;
     renderTariffGrid();
-    renderPaymentInfo();
     updateRenewalPreview();
     updateLavaButton();
     document.getElementById('payment-error').classList.add('hidden');
@@ -1760,39 +1723,6 @@ async function checkPendingLavaPayment() {
 
 function closePaymentModal() {
     document.getElementById('payment-modal').classList.add('hidden');
-}
-
-async function submitPaymentRequest() {
-    const err = document.getElementById('payment-error');
-    err.classList.add('hidden');
-    if (!selectedTariffId) {
-        err.textContent = 'Выберите тариф';
-        err.classList.remove('hidden');
-        return;
-    }
-    const btn = document.getElementById('i-paid-btn');
-    btn.disabled = true;
-    try {
-        const res = await fetch(`${API_URL}/api/subscription/request`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: sessionToken, tariff: selectedTariffId })
-        });
-        const data = await res.json();
-        if (res.ok && data.ok) {
-            showToast('Заявка отправлена! Ждите подтверждения', 'success');
-            closePaymentModal();
-            loadMyKeys();
-        } else {
-            err.textContent = data.error || 'Ошибка';
-            err.classList.remove('hidden');
-        }
-    } catch (e) {
-        err.textContent = 'Ошибка соединения';
-        err.classList.remove('hidden');
-    } finally {
-        btn.disabled = false;
-    }
 }
 
 async function redeemPromo() {
@@ -2080,12 +2010,7 @@ document.getElementById('new-key-btn')?.addEventListener('click', showServerSect
 document.getElementById('create-first-btn')?.addEventListener('click', showServerSection);
 document.getElementById('server-back-btn')?.addEventListener('click', loadMyKeys);
 document.getElementById('payment-close-btn')?.addEventListener('click', closePaymentModal);
-document.getElementById('i-paid-btn')?.addEventListener('click', submitPaymentRequest);
 document.getElementById('lava-pay-btn')?.addEventListener('click', payViaLava);
-document.getElementById('manual-pay-block')?.addEventListener('toggle', (e) => {
-    // Запоминаем что юзер сам открыл/закрыл блок ручной оплаты — больше не трогаем автоматически
-    e.currentTarget.setAttribute('data-toggled-by-user', '1');
-});
 document.getElementById('promo-btn')?.addEventListener('click', redeemPromo);
 document.getElementById('promo-input')?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') redeemPromo();

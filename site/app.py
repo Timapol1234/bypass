@@ -1101,12 +1101,12 @@ def lava_create_invoice(email, tariff_id):
     offer_id = LAVA_OFFERS.get(tariff_id)
     if not offer_id:
         return None, None, f"Нет offer_id для тарифа {tariff_id}"
+    # Не передаём paymentProvider/paymentMethod — иначе lava пресетит карту,
+    # и у юзера не будет выбора между картой и СБП на странице оплаты.
     payload = {
         "email": email,
         "offerId": offer_id,
         "currency": "RUB",
-        "paymentProvider": "SMART_GLOCAL",
-        "paymentMethod": "CARD",
         "buyerLanguage": "RU",
         "periodicity": "ONE_TIME",
     }
