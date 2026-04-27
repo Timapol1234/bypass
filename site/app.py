@@ -1911,8 +1911,9 @@ def api_payment_lava_create():
     email = session["email"]
     contract_id, payment_url, err = lava_create_invoice(email, tariff_id)
     if err:
-        print(f"[lava] create_invoice failed for {email}/{tariff_id}: {err}")
-        return jsonify({"error": "Не удалось создать платёж. Попробуйте позже."}), 502
+        print(f"[lava] create_invoice failed for {email}/{tariff_id}: {err}", flush=True)
+        # На этапе отладки возвращаем причину наружу — потом можно убрать.
+        return jsonify({"error": "Не удалось создать платёж. Попробуйте позже.", "debug": err}), 502
 
     with _STATE_LOCK:
         payments = load_lava_payments()
