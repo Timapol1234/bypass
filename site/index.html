@@ -240,14 +240,20 @@
         details[open] > summary .chevron { transform: rotate(180deg); }
         .otp-input {
             width: 44px; height: 56px;
-            background: var(--wx-surface);
+            background: var(--wx-surface) !important;
             border: 1px solid var(--wx-border);
             border-radius: 8px;
-            color: var(--wx-text);
+            color: var(--wx-text) !important;
+            -webkit-text-fill-color: var(--wx-text) !important;
             font-family: 'JetBrains Mono', monospace;
             font-size: 22px; font-weight: 600;
             text-align: center;
             transition: border-color .15s, box-shadow .15s;
+        }
+        /* Перебиваем дефолтный серый Tailwind forms plugin'а на всех нативных полях */
+        input, textarea, select {
+            color: var(--wx-text) !important;
+            -webkit-text-fill-color: var(--wx-text) !important;
         }
         .otp-input:focus {
             outline: none;

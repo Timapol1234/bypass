@@ -115,6 +115,16 @@
   }
   .wx-input::placeholder { color: var(--wx-text-3) !important; opacity: 1; }
 
+  /* Перебиваем дефолтный серый Tailwind forms plugin'а на всех нативных полях */
+  input, textarea, select {
+    color: var(--wx-text) !important;
+    -webkit-text-fill-color: var(--wx-text) !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: var(--wx-text-3) !important;
+    opacity: 1;
+  }
+
   .primary-gradient {
     background: var(--wx-accent);
     color: #000;
