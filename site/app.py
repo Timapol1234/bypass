@@ -1420,6 +1420,154 @@ def sub_slug(username, user_uuid):
     return f"{username.lower()}_{user_uuid.split('-')[0]}"
 
 
+def build_xray_config(owner):
+    """Xray-core JSON config со всеми VLESS Reality серверами юзера + балансером
+    + Russia bypass routing. Этот формат поддерживают Happ Plus, V2RayNG, Streisand,
+    Hiddify (xray-режим) — клиент сам выбирает быстрый сервер.
+    Совпадает по структуре с тем, что используют коммерческие VPN-сервисы."""
+    users = load_users()
+    owner_email = (owner.get("email") or "").lower()
+    user_keys = [
+        u for u in users
+        if (u.get("email") or "").lower() == owner_email and u.get("in_xray")
+    ]
+    if not user_keys:
+        user_keys = [owner]
+
+    outbounds = []
+    for i, u in enumerate(user_keys):
+        s = SERVERS.get(u.get("server"))
+        if not s:
+            continue
+        tag = "proxy" if i == 0 else f"proxy-{i+1}"
+        outbounds.append({
+            "tag": tag,
+            "protocol": "vless",
+            "settings": {
+                "vnext": [{
+                    "address": s["ip"],
+                    "port": int(s["port"]),
+                    "users": [{
+                        "encryption": "none",
+                        "flow": "",
+                        "id": u["uuid"],
+                    }],
+                }],
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "reality",
+                "realitySettings": {
+                    "fingerprint": s.get("fp", "chrome"),
+                    "publicKey": s["pbk"],
+                    "shortId": s["sid"],
+                    "serverName": s["sni"],
+                },
+                "tcpSettings": {},
+            },
+        })
+    outbounds.append({"protocol": "freedom", "tag": "direct"})
+    outbounds.append({"protocol": "blackhole", "tag": "block"})
+
+    # Сайты, заблокированные внутри РФ или иноагентские медиа — их
+    # обычное правило geosite:category-ru-direct увело бы мимо VPN
+    # и они бы не открылись. Поэтому для них исключение: forced VPN.
+    FORCED_VPN_DOMAINS = [
+        "habr.com", "4pda.to", "4pda.ru",
+        "kemono.su", "jut.su", "kara.su",
+        "theins.ru", "tvrain.ru", "echo.msk.ru",
+        "the-village.ru", "snob.ru",
+        "novayagazeta.ru", "moscowtimes.ru",
+        "meduza.io",
+    ]
+
+    return {
+        "log": {"loglevel": "warning"},
+        "inbounds": [
+            {
+                "tag": "socks",
+                "protocol": "socks",
+                "listen": "127.0.0.1",
+                "port": 10808,
+                "settings": {"auth": "noauth", "udp": True, "userLevel": 8},
+                "sniffing": {
+                    "enabled": True,
+                    "destOverride": ["http", "tls", "quic", "fakedns"],
+                    "routeOnly": False,
+                },
+            },
+            {
+                "tag": "http",
+                "protocol": "http",
+                "listen": "127.0.0.1",
+                "port": 10809,
+                "settings": {"allowTransparent": False, "userLevel": 8},
+                "sniffing": {
+                    "enabled": True,
+                    "destOverride": ["http", "tls", "quic"],
+                    "routeOnly": False,
+                },
+            },
+        ],
+        "dns": {
+            "queryStrategy": "IPIfNonMatch",
+            "servers": [
+                {"address": "1.1.1.1", "skipFallback": False},
+                "1.0.0.1",
+            ],
+            "tag": "dns_out",
+        },
+        "outbounds": outbounds,
+        "policy": {
+            "system": {
+                "statsOutboundDownlink": True,
+                "statsOutboundUplink": True,
+            },
+        },
+        "remarks": "🌐 WIREX",
+        "routing": {
+            "domainMatcher": "hybrid",
+            "domainStrategy": "IPIfNonMatch",
+            "balancers": [{
+                "tag": "wirex_balancer",
+                "fallbackTag": "direct",
+                "selector": ["proxy"],  # выбирает любой outbound с тегом, начинающимся на "proxy"
+                "strategy": {
+                    "type": "leastLoad",
+                    "settings": {
+                        "baselines": ["1s"],
+                        "expected": 2,
+                        "maxRTT": "1s",
+                        "tolerance": 0.01,
+                    },
+                },
+            }],
+            "rules": [
+                # Bittorrent в /dev/null
+                {"type": "field", "protocol": ["bittorrent"], "outboundTag": "block"},
+                # Заблокированные внутри РФ медиа → принудительно через VPN
+                {"type": "field", "domain": FORCED_VPN_DOMAINS, "balancerTag": "wirex_balancer"},
+                # Системные/российские сайты → direct
+                {"type": "field", "domain": [
+                    "geosite:private",
+                    "geosite:apple",
+                    "geosite:apple-pki",
+                    "geosite:huawei",
+                    "geosite:xiaomi",
+                    "geosite:category-android-app-download",
+                    "geosite:f-droid",
+                    "geosite:category-ru",
+                ], "outboundTag": "direct"},
+                # Российские IP и приватные сети → direct
+                {"type": "field", "ip": ["geoip:ru", "geoip:private"], "outboundTag": "direct"},
+                # Всё остальное → балансер (выберет быстрый WIREX-сервер)
+                {"type": "field", "network": "tcp,udp", "balancerTag": "wirex_balancer"},
+            ],
+        },
+        "stats": {},
+    }
+
+
 def build_singbox_config(user):
     """Sing-box JSON config с Russia bypass routing.
     Российские IP/сайты идут direct (минуя VPN) — иначе российские сервисы
@@ -1552,6 +1700,7 @@ def build_key_data(user):
     slug = sub_slug(username, user["uuid"])
     sub_url = f"https://{SUB_HOST}/sub/{slug}"
     sub_singbox_url = f"https://{SUB_HOST}/sub-singbox/{slug}"
+    sub_xray_url = f"https://{SUB_HOST}/sub-xray/{slug}"
     data = {
         "uuid": user["uuid"],
         "username": username,
@@ -1562,6 +1711,7 @@ def build_key_data(user):
         "vless_url": vless_url,
         "sub_url": sub_url,
         "sub_singbox_url": sub_singbox_url,
+        "sub_xray_url": sub_xray_url,
         "qr": generate_qr_base64(vless_url),
         "hysteria_url": None,
         "hysteria_qr": None,
@@ -2971,6 +3121,40 @@ def _profile_meta_for_user(user):
             except Exception:
                 pass
     return title_text, expire_ts, is_unlimited
+
+
+@app.route("/sub-xray/<filename>")
+def serve_subscription_xray(filename):
+    """Xray-core JSON config — для Happ Plus / V2RayN / Streisand.
+    Включает все ключи юзера (балансер автовыбирает быстрый сервер) +
+    Russia bypass routing + список заблокированных в РФ медиа через VPN."""
+    users = load_users()
+    owner = next(
+        (u for u in users if sub_slug(u["username"], u["uuid"]) == filename),
+        None,
+    )
+    if not owner:
+        return jsonify({"error": "Not found"}), 404
+
+    config = build_xray_config(owner)
+    body = json.dumps(config, indent=2, ensure_ascii=False)
+    resp = Response(body, mimetype="application/json")
+
+    title_text, expire_ts, _ = _profile_meta_for_user(owner)
+    title_b64 = base64.b64encode(title_text.encode("utf-8")).decode("ascii")
+    resp.headers["Profile-Title"] = f"base64:{title_b64}"
+    resp.headers["Profile-Update-Interval"] = "6"
+    # Поддержка через Telegram — клиент рендерит как кнопку с tg-значком
+    resp.headers["Profile-Web-Page-Url"] = "https://t.me/wirex"
+    resp.headers["Support-Url"] = "tg://resolve?domain=wirex"
+    # total=0 — клиент покажет «X / ∞» вместо фейкового лимита
+    if expire_ts:
+        resp.headers["Subscription-Userinfo"] = (
+            f"upload=0; download=0; total=0; expire={expire_ts}"
+        )
+    else:
+        resp.headers["Subscription-Userinfo"] = "upload=0; download=0; total=0"
+    return resp
 
 
 @app.route("/sub-singbox/<filename>")

@@ -782,6 +782,7 @@ Protected
 let pendingEmail = '';
 let currentSubUrl = '';
 let currentSubSingboxUrl = '';
+let currentSubXrayUrl = '';
 let currentVlessUrl = '';
 let currentHy2Url = '';
 let userEmail = localStorage.getItem('user_email') || '';
@@ -886,16 +887,16 @@ function updateSubStatusChip() {
     chip.classList.remove('hidden');
 }
 
-function buildClientDeepLinks(subUrl, vlessUrl, hy2Url, subSingboxUrl) {
+function buildClientDeepLinks(subUrl, vlessUrl, hy2Url, subXrayUrl) {
     const enc = encodeURIComponent(subUrl);
-    // Все три клиента импортируют URL-подписку (списком VLESS/Hysteria URL).
-    // Happ Plus отказался от sing-box JSON — ему нужен либо URL-список,
-    // либо Happ-специфичный профиль. Routing для РФ-сервисов настраивается
-    // в самом Happ Plus: Settings → Routing → выбрать «Россия».
+    // Happ Plus получает Xray JSON — там балансер автовыбирает быстрейший
+    // сервер + Russia bypass routing (российские сайты идут direct, иначе
+    // банки/госуслуги блокируют). V2Box/V2RayTun — обычная URL-подписка.
+    const happSrc = subXrayUrl || subUrl;
     return {
         v2box: `v2box://install-sub?url=${enc}&name=WIREX`,
         v2raytun: `v2raytun://import/${enc}`,
-        happ: `happ://add/${enc}`,
+        happ: `happ://add/${encodeURIComponent(happSrc)}`,
     };
 }
 
@@ -904,7 +905,7 @@ document.getElementById('auto-import-btn')?.addEventListener('click', () => {
         showToast('Не нашёл ссылку подписки', 'error');
         return;
     }
-    const links = buildClientDeepLinks(currentSubUrl, currentVlessUrl, currentHy2Url, currentSubSingboxUrl);
+    const links = buildClientDeepLinks(currentSubUrl, currentVlessUrl, currentHy2Url, currentSubXrayUrl);
     const v2box = document.getElementById('open-v2box');
     const v2raytun = document.getElementById('open-v2raytun');
     const happ = document.getElementById('open-happ');
@@ -1325,6 +1326,7 @@ function showResult(data, toastMessage) {
     document.getElementById('sub-url').textContent = data.sub_url;
     currentSubUrl = data.sub_url || '';
     currentSubSingboxUrl = data.sub_singbox_url || '';
+    currentSubXrayUrl = data.sub_xray_url || '';
     currentVlessUrl = data.vless_url || '';
     currentHy2Url = data.hysteria_url || '';
     document.getElementById('result-info').textContent = `${data.username} — ${data.server_name || data.server}`;
