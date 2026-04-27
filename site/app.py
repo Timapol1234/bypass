@@ -2919,11 +2919,11 @@ def serve_subscription(filename):
     resp = send_from_directory(SUB_DIR, filename, mimetype="text/plain")
 
     # Стандартные заголовки v2ray-подписки — клиенты (Happ Plus, V2Box, Hiddify,
-    # sing-box) читают их и показывают красивое имя профиля вместо хоста + срок,
-    # вместо `api.wirex.online`. Profile-Title д.б. base64-encoded UTF-8.
-    title_text = "WIREX | Encrypted Access"
+    # sing-box) читают их и показывают красивое имя профиля вместо хоста
+    # `api.wirex.online`. Срок подписки клиент сам покажет из Subscription-Userinfo expire=,
+    # дублировать в title не нужно — было неэстетично.
+    title_text = "WIREX - Encrypted Access"
     expire_ts = None
-    is_unlimited = False
     try:
         users = load_users()
         owner = next(
@@ -2932,14 +2932,11 @@ def serve_subscription(filename):
         )
         if owner:
             sub = get_subscription(owner.get("email", ""))
-            if sub:
-                if sub.get("plan") == "unlimited":
-                    is_unlimited = True
-                    title_text = "WIREX | Доступ без срока"
-                elif sub.get("expires_at"):
-                    exp = datetime.fromisoformat(sub["expires_at"])
-                    expire_ts = int(exp.timestamp())
-                    title_text = f"WIREX | Доступ до {exp.strftime('%d.%m.%Y')}"
+            if sub and sub.get("plan") != "unlimited" and sub.get("expires_at"):
+                try:
+                    expire_ts = int(datetime.fromisoformat(sub["expires_at"]).timestamp())
+                except Exception:
+                    pass
     except Exception:
         pass
 
@@ -2959,20 +2956,18 @@ def serve_subscription(filename):
 
 
 def _profile_meta_for_user(user):
-    """Возвращает (title_text, expire_ts, is_unlimited) для профиля юзера."""
-    title_text = "WIREX | Encrypted Access"
+    """Возвращает (title_text, expire_ts, is_unlimited). Title постоянный —
+    срок клиент покажет сам из Subscription-Userinfo expire=."""
+    title_text = "WIREX - Encrypted Access"
     expire_ts = None
     is_unlimited = False
     sub = get_subscription((user.get("email") or "")) if user else None
     if sub:
         if sub.get("plan") == "unlimited":
             is_unlimited = True
-            title_text = "WIREX — Encrypted Access · ∞"
         elif sub.get("expires_at"):
             try:
-                exp = datetime.fromisoformat(sub["expires_at"])
-                expire_ts = int(exp.timestamp())
-                title_text = f"WIREX — Encrypted Access · до {exp.strftime('%d.%m.%Y')}"
+                expire_ts = int(datetime.fromisoformat(sub["expires_at"]).timestamp())
             except Exception:
                 pass
     return title_text, expire_ts, is_unlimited
