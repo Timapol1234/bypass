@@ -1420,6 +1420,142 @@ def sub_slug(username, user_uuid):
     return f"{username.lower()}_{user_uuid.split('-')[0]}"
 
 
+def pick_recommended_server():
+    """Авто-выбор сервера с наименьшей загрузкой среди активных (не disabled).
+    Загрузка = users_count / max_users. Возвращает server_key."""
+    users = load_users()
+    counts = {}
+    for u in users:
+        srv = u.get("server")
+        if srv:
+            counts[srv] = counts.get(srv, 0) + 1
+    best_key, best_load = None, 1.0
+    for key, s in SERVERS.items():
+        if s.get("disabled"):
+            continue
+        max_u = max(capacity_for_server(s), 1)
+        load = counts.get(key, 0) / max_u
+        if load < best_load:
+            best_load = load
+            best_key = key
+    if best_key is None:  # все disabled — берём первый попавшийся
+        for key, s in SERVERS.items():
+            if not s.get("disabled"):
+                return key
+    return best_key
+
+
+def pick_backup_server():
+    """Запасной сервер. Приоритет: серверу с is_backup=True, иначе amsterdam,
+    иначе первый активный."""
+    for key, s in SERVERS.items():
+        if s.get("is_backup") and not s.get("disabled"):
+            return key
+    if "amsterdam" in SERVERS and not SERVERS["amsterdam"].get("disabled"):
+        return "amsterdam"
+    for key, s in SERVERS.items():
+        if not s.get("disabled"):
+            return key
+    return None
+
+
+def add_to_all_servers(user_uuid, email, username):
+    """Регистрирует UUID юзера на всех активных серверах + создаёт hysteria-пароль.
+    Возвращает (entries: list, hysteria_password: str|None) — список записей для users.json."""
+    entries = []
+    hy_pw = None
+    now_iso = datetime.now().isoformat()
+    for srv_key, s in SERVERS.items():
+        if s.get("disabled"):
+            continue
+        try:
+            add_to_xray(user_uuid, srv_key, username)
+            if hy_pw is None:
+                hy_pw = add_to_hysteria_safe(srv_key, username)
+            entries.append({
+                "username": username,
+                "uuid": user_uuid,
+                "server": srv_key,
+                "email": email,
+                "created": now_iso,
+                "in_xray": True,
+                "hysteria_password": hy_pw,
+            })
+        except Exception as e:
+            print(f"[add-all] {srv_key} failed for {email}: {e}", flush=True)
+    return entries, hy_pw
+
+
+def _ensure_user_on_all_servers(owner):
+    """Лазили миграция: гарантирует что UUID юзера зарегестрирован на всех активных серверах.
+    Нужно для legacy-юзеров — у них UUID был только на одном сервере (выбранном вручную)."""
+    users = load_users()
+    email = (owner.get("email") or "").lower()
+    user_uuid = owner["uuid"]
+    username = owner["username"]
+    if not email or not user_uuid:
+        return
+    existing = {
+        u["server"] for u in users
+        if (u.get("email") or "").lower() == email
+        and u.get("uuid") == user_uuid
+    }
+    target = {key for key, s in SERVERS.items() if not s.get("disabled")}
+    missing = target - existing
+    if not missing:
+        return
+    changed = False
+    with _STATE_LOCK:
+        users = load_users()  # перечитываем под локом
+        existing = {
+            u["server"] for u in users
+            if (u.get("email") or "").lower() == email
+            and u.get("uuid") == user_uuid
+        }
+        for srv_key in (target - existing):
+            try:
+                add_to_xray(user_uuid, srv_key, username)
+                users.append({
+                    "username": username,
+                    "uuid": user_uuid,
+                    "server": srv_key,
+                    "email": owner.get("email"),
+                    "created": datetime.now().isoformat(),
+                    "in_xray": True,
+                    "hysteria_password": owner.get("hysteria_password"),
+                })
+                changed = True
+                print(f"[migrate] +{srv_key} for {email}", flush=True)
+            except Exception as e:
+                print(f"[migrate] {srv_key} failed for {email}: {e}", flush=True)
+        if changed:
+            save_users(users)
+
+
+def build_user_subscription_3mode(owner):
+    """Возвращает base64-encoded список из 3 vless URL — Auto/LTE/Backup —
+    для юзера. Использует один UUID owner-а (предполагается что зарегестрирован
+    на всех серверах через _ensure_user_on_all_servers)."""
+    auto_key = pick_recommended_server()
+    backup_key = pick_backup_server()
+    # LTE пока стуб = тот же auto-сервер, но с отдельным тегом — когда появятся
+    # spec-серверы, переключим pick_lte_server() на их пул.
+    lte_key = auto_key
+
+    user_uuid = owner["uuid"]
+    urls = []
+    if auto_key:
+        urls.append(build_vless_url(user_uuid, auto_key, name="WIREX Авто выбор | Самый быстрый"))
+    if lte_key:
+        urls.append(build_vless_url(user_uuid, lte_key, name="WIREX LTE Обход"))
+    if backup_key and backup_key != auto_key:
+        urls.append(build_vless_url(user_uuid, backup_key, name="WIREX Запасной"))
+    elif backup_key:
+        # backup совпал с auto — всё равно показываем как отдельный entry
+        urls.append(build_vless_url(user_uuid, backup_key, name="WIREX Запасной"))
+    return base64.b64encode("\n".join(urls).encode()).decode()
+
+
 def build_xray_config(owner):
     """Xray-core JSON config со всеми VLESS Reality серверами юзера + балансером
     + Russia bypass routing. Этот формат поддерживают Happ Plus, V2RayNG, Streisand,
@@ -3087,43 +3223,34 @@ def delete_user():
 
 @app.route("/sub/<filename>")
 def serve_subscription(filename):
-    # send_from_directory нормализует путь и режет .. / абсолютные пути -> 404.
-    # Имя файла без слешей уже ограничено <filename> (не <path:>).
-    resp = send_from_directory(SUB_DIR, filename, mimetype="text/plain")
+    """Динамическая 3-mode подписка. Slug = `username_uuid8`.
+    Возвращает base64(vless-Auto + vless-LTE + vless-Backup) — Happ показывает
+    их как 3 сервера в группе, юзер выбирает один. UUID юзера лазили
+    регестрируется на всех серверах (legacy-юзеры были только на одном)."""
+    users = load_users()
+    owner = next(
+        (u for u in users if sub_slug(u["username"], u["uuid"]) == filename),
+        None,
+    )
+    if not owner:
+        # Legacy/orphan slug: статический файл. Не должно случаться у активных юзеров.
+        if os.path.exists(os.path.join(SUB_DIR, filename)):
+            return send_from_directory(SUB_DIR, filename, mimetype="text/plain")
+        return "Not found", 404
 
-    # Стандартные заголовки v2ray-подписки — клиенты (Happ Plus, V2Box, Hiddify,
-    # sing-box) читают их и показывают красивое имя профиля вместо хоста
-    # `api.wirex.online`. Срок подписки клиент сам покажет из Subscription-Userinfo expire=,
-    # дублировать в title не нужно — было неэстетично.
-    title_text = "WIREX - Encrypted Access"
-    expire_ts = None
-    try:
-        users = load_users()
-        owner = next(
-            (u for u in users if sub_slug(u["username"], u["uuid"]) == filename),
-            None,
-        )
-        if owner:
-            sub = get_subscription(owner.get("email", ""))
-            if sub and sub.get("plan") != "unlimited" and sub.get("expires_at"):
-                try:
-                    expire_ts = int(datetime.fromisoformat(sub["expires_at"]).timestamp())
-                except Exception:
-                    pass
-    except Exception:
-        pass
+    # Гарантируем что UUID юзера зарегестрирован на всех активных серверах
+    _ensure_user_on_all_servers(owner)
 
+    body = build_user_subscription_3mode(owner)
+    resp = Response(body, mimetype="text/plain")
+
+    title_text, expire_ts, _ = _profile_meta_for_user(owner)
     title_b64 = base64.b64encode(title_text.encode("utf-8")).decode("ascii")
     resp.headers["Profile-Title"] = f"base64:{title_b64}"
-    # Часов до автообновления подписки клиентом. 6 — компромисс между свежестью
-    # (новые сервера/цены/срок) и нагрузкой.
     resp.headers["Profile-Update-Interval"] = "6"
-    # Клиенты показывают как кнопку «Открыть сайт» / «Поддержка»
-    resp.headers["Profile-Web-Page-Url"] = "https://wirex.online"
-    resp.headers["Support-Url"] = "https://wirex.online"
+    resp.headers["Profile-Web-Page-Url"] = "https://t.me/wirex"
+    resp.headers["Support-Url"] = "tg://resolve?domain=wirex"
     if expire_ts:
-        # Только expire — без upload/download/total. Иначе Happ показывает
-        # фейковый счётчик трафика «0n / 100GB». Тарифы у нас по времени, не по гигабайтам.
         resp.headers["Subscription-Userinfo"] = f"expire={expire_ts}"
     return resp
 
