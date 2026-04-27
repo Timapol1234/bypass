@@ -2843,7 +2843,49 @@ def delete_user():
 def serve_subscription(filename):
     # send_from_directory нормализует путь и режет .. / абсолютные пути -> 404.
     # Имя файла без слешей уже ограничено <filename> (не <path:>).
-    return send_from_directory(SUB_DIR, filename, mimetype="text/plain")
+    resp = send_from_directory(SUB_DIR, filename, mimetype="text/plain")
+
+    # Стандартные заголовки v2ray-подписки — клиенты (Happ Plus, V2Box, Hiddify,
+    # sing-box) читают их и показывают красивое имя профиля вместо хоста + срок,
+    # вместо `api.wirex.online`. Profile-Title д.б. base64-encoded UTF-8.
+    title_text = "WIREX — Encrypted Access"
+    expire_ts = None
+    is_unlimited = False
+    try:
+        users = load_users()
+        owner = next(
+            (u for u in users if sub_slug(u["username"], u["uuid"]) == filename),
+            None,
+        )
+        if owner:
+            sub = get_subscription(owner.get("email", ""))
+            if sub:
+                if sub.get("plan") == "unlimited":
+                    is_unlimited = True
+                    title_text = "WIREX — Encrypted Access · ∞"
+                elif sub.get("expires_at"):
+                    exp = datetime.fromisoformat(sub["expires_at"])
+                    expire_ts = int(exp.timestamp())
+                    title_text = f"WIREX — Encrypted Access · до {exp.strftime('%d.%m.%Y')}"
+    except Exception:
+        pass
+
+    title_b64 = base64.b64encode(title_text.encode("utf-8")).decode("ascii")
+    resp.headers["Profile-Title"] = f"base64:{title_b64}"
+    # Часов до автообновления подписки клиентом. 6 — компромисс между свежестью
+    # (новые сервера/цены/срок) и нагрузкой.
+    resp.headers["Profile-Update-Interval"] = "6"
+    # Клиенты показывают как кнопку «Открыть сайт» / «Поддержка»
+    resp.headers["Profile-Web-Page-Url"] = "https://wirex.online"
+    resp.headers["Support-Url"] = "https://wirex.online"
+    if expire_ts:
+        # total=0 в некоторых клиентах прячет блок «осталось»; ставим большое число
+        resp.headers["Subscription-Userinfo"] = (
+            f"upload=0; download=0; total=107374182400; expire={expire_ts}"
+        )
+    elif is_unlimited:
+        resp.headers["Subscription-Userinfo"] = "upload=0; download=0; total=107374182400"
+    return resp
 
 ISSUE_LABELS = {
     "offline": "Сервер не отвечает",
