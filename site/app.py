@@ -2843,6 +2843,7 @@ def admin_stats():
 
         result.append({
             "username": username,
+            "uuid": u.get("uuid", ""),
             "email": u.get("email", "—"),
             "server": srv_key,
             "server_name": SERVERS[srv_key]["name"],
@@ -3235,9 +3236,18 @@ def delete_user():
     data, err = _require_admin()
     if err: return err
 
-    username = data.get("username", "")
+    # Приоритет — uuid (уникален). Username используется как fallback для legacy
+    # вызовов, но у одного email может быть несколько ключей на разных серверах,
+    # и поиск только по username удалял первый попавшийся, не тот что админ кликнул.
+    target_uuid = (data.get("uuid") or "").strip()
+    username = (data.get("username") or "").strip()
     users = load_users()
-    user = next((u for u in users if u["username"].lower() == username.lower()), None)
+    if target_uuid:
+        user = next((u for u in users if u.get("uuid") == target_uuid), None)
+    elif username:
+        user = next((u for u in users if (u.get("username") or "").lower() == username.lower()), None)
+    else:
+        return jsonify({"error": "Нужен uuid или username"}), 400
 
     if not user:
         return jsonify({"error": "Пользователь не найден"}), 404

@@ -888,19 +888,19 @@ function renderUsers() {
       <td class="font-mono">${fmtBytes(u.traffic_up)}</td>
       <td class="font-mono">${fmtBytes(u.traffic_down)}</td>
       <td class="font-mono font-semibold">${fmtBytes(u.traffic_up + u.traffic_down)}</td>
-      <td><button class="btn-danger" data-del="${escapeHtml(u.username)}">Удалить</button></td>
+      <td><button class="btn-danger" data-del-uuid="${escapeHtml(u.uuid || '')}" data-del-name="${escapeHtml(u.username)}" data-del-server="${escapeHtml(u.server_name || u.server || '')}">Удалить</button></td>
     </tr>
   `).join('');
 
-  body.querySelectorAll('[data-del]').forEach(btn => {
-    btn.onclick = () => deleteUser(btn.dataset.del);
+  body.querySelectorAll('[data-del-uuid]').forEach(btn => {
+    btn.onclick = () => deleteUser(btn.dataset.delUuid, btn.dataset.delName, btn.dataset.delServer);
   });
 }
 
-async function deleteUser(username) {
-  if (!confirm(`Удалить пользователя "${username}"? Ключ перестанет работать.`)) return;
+async function deleteUser(uuid, username, server) {
+  if (!confirm(`Удалить ключ ${username} на ${server}? Ключ перестанет работать.`)) return;
   try {
-    const r = await api('/api/delete', {username});
+    const r = await api('/api/delete', { uuid, username });
     if (r.ok) loadAll();
     else alert(r.error || 'Ошибка');
   } catch (e) { /* already handled */ }
