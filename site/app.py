@@ -1215,14 +1215,17 @@ def exec_python_on_server(server_key, script):
 
 def add_to_xray(user_uuid, server_key, email):
     config_path = SERVERS[server_key]["xray_config"]
+    # Сначала выкидываем любые existing entries с тем же email или uuid —
+    # xray-vless не разрешает дубликат email и падает с
+    # «User <email> already exists» при рестарте, если оставить второй entry.
     script = (
         "import json\n"
         f"p = {config_path!r}\n"
         "with open(p) as f: c = json.load(f)\n"
         "ib = next(i for i in c['inbounds'] if i.get('protocol') == 'vless')\n"
         "clients = ib['settings']['clients']\n"
-        f"if not any(x['id'] == {user_uuid!r} for x in clients):\n"
-        f"    clients.append({{'id': {user_uuid!r}, 'email': {email!r}, 'flow': ''}})\n"
+        f"clients[:] = [x for x in clients if x.get('email') != {email!r} and x.get('id') != {user_uuid!r}]\n"
+        f"clients.append({{'id': {user_uuid!r}, 'email': {email!r}, 'flow': ''}})\n"
         "with open(p, 'w') as f: json.dump(c, f, indent=2)\n"
     )
     exec_python_on_server(server_key, script)
